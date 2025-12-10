@@ -90,6 +90,7 @@ export function Graph({
   const [isPanning, setIsPanning] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);  // 애니메이션 중인지
   const panStart = useRef({ x: 0, y: 0 });
+  const svgRef = useRef<SVGSVGElement>(null);
   
   const selectedNodeId = externalSelectedId !== undefined ? externalSelectedId : internalSelectedId;
 
@@ -250,12 +251,23 @@ export function Graph({
     return sourceId === selectedNodeId || targetId === selectedNodeId;
   };
 
-  // 마우스 휠 - 줌
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
+  // 마우스 휠 - 줌 (useEffect에서 등록)
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+      setZoom(prev => Math.min(Math.max(prev + delta, MIN_ZOOM), MAX_ZOOM));
+    };
+
+    // passive: false로 등록해야 preventDefault() 사용 가능
+    svg.addEventListener('wheel', handleWheel, { passive: false });
     
-    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-    setZoom(prev => Math.min(Math.max(prev + delta, MIN_ZOOM), MAX_ZOOM));
+    return () => {
+      svg.removeEventListener('wheel', handleWheel);
+    };
   }, [setZoom]);
 
   // 팬 시작 (마우스 다운)
@@ -338,10 +350,10 @@ export function Graph({
 
       {/* 메인 그래프 SVG */}
       <svg
+        ref={svgRef}
         width={dimensions.width}
         height={dimensions.height}
         onClick={handleBackgroundClick}
-        onWheel={handleWheel}
         onMouseDown={handlePanStart}
         onMouseMove={handlePanMove}
         onMouseUp={handlePanEnd}
