@@ -214,7 +214,10 @@ function App() {
             setSelectedNode(null);  // 먼저 선택 해제 (블러 제거)
             deleteTask(id);         // 그 다음 삭제
           }}
-          onStartLinking={(nodeId) => setLinkingMode(nodeId)}
+          onStartLinking={(nodeId) => {
+            setLinkingMode(nodeId);
+            setSelectedNode(null);  // 패널 닫기 (블러 제거)
+          }}
           onDeleteEdge={(targetId) => {
             if (selectedNode) {
               deleteEdge(selectedNode.id, targetId);

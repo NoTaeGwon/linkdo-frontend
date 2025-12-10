@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "exportedAt": "2024-12-10T00:00:00.000Z",
+  "tasks": [
+    {
+      "id": "task-sample-1",
+      "title": "프로젝트 기획",
+      "description": "새로운 웹앱 프로젝트 기획서 작성",
+      "priority": "high",
+      "status": "done",
+      "category": "work"
+    },
+    {
+      "id": "task-sample-2",
+      "title": "UI 디자인",
+      "description": "Figma로 UI 목업 제작",
+      "priority": "medium",
+      "status": "in-progress",
+      "category": "design"
+    },
+    {
+      "id": "task-sample-3",
+      "title": "백엔드 API 개발",
+      "description": "FastAPI로 REST API 구현",
+      "priority": "critical",
+      "status": "in-progress",
+      "category": "backend"
+    },
+    {
+      "id": "task-sample-4",
+      "title": "프론트엔드 개발",
+      "description": "React + TypeScript 프론트엔드 구현",
+      "priority": "critical",
+      "status": "todo",
+      "category": "frontend"
+    },
+    {
+      "id": "task-sample-5",
+      "title": "테스트 작성",
+      "description": "유닛 테스트 및 E2E 테스트",
+      "priority": "medium",
+      "status": "todo",
+      "category": "testing"
+    },
+    {
+      "id": "task-sample-6",
+      "title": "배포 준비",
+      "description": "Docker 컨테이너화 및 CI/CD 설정",
+      "priority": "low",
+      "status": "todo",
+      "category": "devops"
+    }
+  ],
+  "edges": [
+    {
+      "source": "task-sample-1",
+      "target": "task-sample-2",
+      "weight": 0.9
+    },
+    {
+      "source": "task-sample-1",
+      "target": "task-sample-3",
+      "weight": 0.8
+    },
+    {
+      "source": "task-sample-2",
+      "target": "task-sample-4",
+      "weight": 0.7
+    },
+    {
+      "source": "task-sample-3",
+      "target": "task-sample-4",
+      "weight": 0.9
+    },
+    {
+      "source": "task-sample-4",
+      "target": "task-sample-5",
+      "weight": 0.6
+    },
+    {
+      "source": "task-sample-5",
+      "target": "task-sample-6",
+      "weight": 0.5
+    }
+  ]
+}
+

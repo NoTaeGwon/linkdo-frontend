@@ -517,8 +517,8 @@ export function useTaskStore() {
 
       if (isOnline) {
         // 온라인: 서버에 데이터 추가
-        if (mode === 'replace') {
-          // 기존 데이터 삭제 (서버)
+        if (mode === 'replace' && !isDemoMode) {
+          // 기존 데이터 삭제 (서버) - 데모 모드가 아닐 때만
           for (const task of tasks) {
             try {
               await api.deleteTaskApi(task.id);
@@ -572,6 +572,19 @@ export function useTaskStore() {
       } else {
         // 오프라인: 기존 로컬 로직 사용
         if (mode === 'replace') {
+          // 대기 큐 초기화 (이전 작업들이 온라인 복구 시 실행되지 않도록)
+          await db.pendingOperations.clear();
+          
+          // 기존 태스크들의 delete 작업을 대기 큐에 추가 (온라인 복구 시 서버 데이터도 삭제)
+          for (const task of tasks) {
+            await addPendingOperation({
+              type: 'delete',
+              entity: 'task',
+              entityId: task.id,
+            });
+          }
+          
+          // IndexedDB 초기화
           await db.tasks.clear();
           await db.edges.clear();
         }

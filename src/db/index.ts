@@ -38,27 +38,12 @@ export class LinkdoDB extends Dexie {
     // 부모 클래스(Dexie) 생성자 호출, DB 이름 전달
     super('LinkdoDB');
 
-    // 테이블 스키마 정의 (최신 버전만 정의)
-    // version(2) = 오프라인 작업 큐 추가 + edges에 id 키 추가
-    this.version(2).stores({
-      tasks: 'id, priority, status, category',
-      edges: 'id, source, target',
-      pendingOperations: '++id, type, entity, entityId, timestamp',
-    }).upgrade(async tx => {
-      // 기존 edges 데이터에 id가 없으면 생성
-      const edges = await tx.table('edges').toArray();
-      for (const edge of edges) {
-        if (!edge.id) {
-          edge.id = `edge-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-          await tx.table('edges').put(edge);
-        }
-      }
-    });
-
-    // 기존 버전 (마이그레이션 지원)
+    // 테이블 스키마 정의
+    // edges: source+target 복합 키를 primary key로 사용
     this.version(1).stores({
       tasks: 'id, priority, status, category',
-      edges: '++id, source, target',
+      edges: '[source+target], source, target',
+      pendingOperations: '++id, type, entity, entityId, timestamp',
     });
   }
 }

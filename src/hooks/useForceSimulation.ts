@@ -67,7 +67,14 @@ export function useForceSimulation({
       return { ...n };
     });
     
-    const edgesCopy: TaskEdge[] = edges.map((e) => ({ ...e }));
+    // 존재하는 노드만 참조하는 엣지만 사용 (동기화 중 불일치 방지)
+    const nodeIds = new Set(nodesCopy.map(n => n.id));
+    const validEdges = edges.filter(e => {
+      const sourceId = typeof e.source === 'string' ? e.source : e.source.id;
+      const targetId = typeof e.target === 'string' ? e.target : e.target.id;
+      return nodeIds.has(sourceId) && nodeIds.has(targetId);
+    });
+    const edgesCopy: TaskEdge[] = validEdges.map((e) => ({ ...e }));
 
     // 참조 저장 (드래그에서 사용)
     nodesRef.current = nodesCopy;
