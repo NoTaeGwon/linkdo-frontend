@@ -11,6 +11,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'critical',
     status: 'done',
     category: 'planning',
+    tags: ['기획', '문서', '중요'],
   },
   {
     id: 'task-2',
@@ -19,6 +20,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'high',
     status: 'done',
     category: 'design',
+    tags: ['디자인', 'UI', 'UX'],
   },
   {
     id: 'task-3',
@@ -27,6 +29,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'high',
     status: 'in-progress',
     category: 'backend',
+    tags: ['백엔드', 'DB', '설계'],
   },
   {
     id: 'task-4',
@@ -35,6 +38,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'high',
     status: 'todo',
     category: 'backend',
+    tags: ['백엔드', 'API', 'REST'],
   },
   {
     id: 'task-5',
@@ -43,6 +47,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'high',
     status: 'in-progress',
     category: 'frontend',
+    tags: ['프론트엔드', 'React', 'TypeScript'],
   },
   {
     id: 'task-6',
@@ -51,6 +56,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'medium',
     status: 'todo',
     category: 'backend',
+    tags: ['백엔드', '인증', '보안'],
   },
   {
     id: 'task-7',
@@ -59,6 +65,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'medium',
     status: 'todo',
     category: 'frontend',
+    tags: ['프론트엔드', 'UI', '대시보드'],
   },
   {
     id: 'task-8',
@@ -67,6 +74,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'medium',
     status: 'todo',
     category: 'testing',
+    tags: ['테스트', 'QA', '자동화'],
   },
   {
     id: 'task-9',
@@ -75,6 +83,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'low',
     status: 'todo',
     category: 'docs',
+    tags: ['문서', 'API', '가이드'],
   },
   {
     id: 'task-10',
@@ -83,6 +92,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'medium',
     status: 'todo',
     category: 'devops',
+    tags: ['DevOps', 'CI/CD', '배포'],
   },
   {
     id: 'task-11',
@@ -91,6 +101,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'low',
     status: 'todo',
     category: 'frontend',
+    tags: ['프론트엔드', '성능', '최적화'],
   },
   {
     id: 'task-12',
@@ -99,6 +110,7 @@ export const sampleNodes: TaskNode[] = [
     priority: 'critical',
     status: 'todo',
     category: 'security',
+    tags: ['보안', '검토', '중요'],
   },
 ];
 

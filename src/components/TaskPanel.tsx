@@ -44,6 +44,8 @@ export function TaskPanel({
   const [editDescription, setEditDescription] = useState('');
   const [editPriority, setEditPriority] = useState<Priority>('medium');
   const [editStatus, setEditStatus] = useState<TaskStatus>('todo');
+  const [editTags, setEditTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // selectedNode가 변경되면 수정 모드 종료
@@ -62,7 +64,23 @@ export function TaskPanel({
     setEditDescription(selectedNode.description || '');
     setEditPriority(selectedNode.priority);
     setEditStatus(selectedNode.status);
+    setEditTags(selectedNode.tags || []);
+    setTagInput('');
     setIsEditing(true);
+  };
+
+  // 태그 추가
+  const handleAddTag = () => {
+    const newTag = tagInput.trim();
+    if (newTag && !editTags.includes(newTag)) {
+      setEditTags([...editTags, newTag]);
+      setTagInput('');
+    }
+  };
+
+  // 태그 삭제
+  const handleRemoveTag = (tagToRemove: string) => {
+    setEditTags(editTags.filter(tag => tag !== tagToRemove));
   };
 
   // 수정 저장
@@ -73,6 +91,7 @@ export function TaskPanel({
         description: editDescription.trim() || undefined,
         priority: editPriority,
         status: editStatus,
+        tags: editTags,
       });
       setIsEditing(false);
     }
@@ -336,6 +355,124 @@ export function TaskPanel({
                   ? selectedNode.id.slice(0, 15) + '...' 
                   : selectedNode.id}
               </code>
+            </div>
+          )}
+        </div>
+
+        {/* 태그 섹션 */}
+        <div style={{
+          marginTop: '16px',
+          paddingTop: '16px',
+          borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+        }}>
+          <span style={{ color: '#64748b', fontSize: '13px', display: 'block', marginBottom: '10px' }}>
+            🏷️ 태그
+          </span>
+          
+          {/* 수정 모드: 태그 편집 */}
+          {isEditing ? (
+            <div>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                  placeholder="태그 입력 후 Enter..."
+                  style={{
+                    flex: 1,
+                    padding: '6px 10px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    border: '1px solid rgba(148, 163, 184, 0.3)',
+                    borderRadius: '6px',
+                    color: '#cbd5e1',
+                    fontSize: '12px',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddTag}
+                  style={{
+                    padding: '6px 12px',
+                    background: 'rgba(99, 102, 241, 0.2)',
+                    border: '1px solid rgba(99, 102, 241, 0.3)',
+                    borderRadius: '6px',
+                    color: '#818cf8',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  추가
+                </button>
+              </div>
+              {editTags.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {editTags.map(tag => (
+                    <span
+                      key={tag}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px 8px',
+                        background: 'rgba(99, 102, 241, 0.2)',
+                        border: '1px solid rgba(99, 102, 241, 0.3)',
+                        borderRadius: '12px',
+                        color: '#a5b4fc',
+                        fontSize: '11px',
+                      }}
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#94a3b8',
+                          cursor: 'pointer',
+                          padding: '0',
+                          fontSize: '12px',
+                          lineHeight: 1,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* 보기 모드: 태그 표시 */
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {(selectedNode.tags && selectedNode.tags.length > 0) ? (
+                selectedNode.tags.map(tag => (
+                  <span
+                    key={tag}
+                    style={{
+                      padding: '4px 10px',
+                      background: 'rgba(99, 102, 241, 0.2)',
+                      border: '1px solid rgba(99, 102, 241, 0.3)',
+                      borderRadius: '12px',
+                      color: '#a5b4fc',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span style={{ color: '#64748b', fontSize: '12px' }}>
+                  태그 없음
+                </span>
+              )}
             </div>
           )}
         </div>

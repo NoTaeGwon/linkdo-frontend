@@ -20,6 +20,7 @@
  * @property priority - 우선순위 (원의 크기에 영향)
  * @property status - 태스크 상태
  * @property category - 태스크 카테고리 (색상 그룹)
+ * @property tags - 태스크 태그
  * @property x, y - d3-force 시뮬레이션에서 계산되는 좌표
  * @property fx, fy - 고정 좌표 (드래그 시 사용)
  */
@@ -30,6 +31,7 @@ export interface TaskNode {
   priority: Priority;
   status: TaskStatus;
   category?: string;
+  tags: string[];
   // d3-force 시뮬레이션 좌표
   x?: number;
   y?: number;

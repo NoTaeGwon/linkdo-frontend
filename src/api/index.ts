@@ -24,6 +24,7 @@ interface ApiTask {
   priority: Priority;
   status: TaskStatus;
   category?: string;
+  tags: string[];
 }
 
 /**
@@ -88,6 +89,7 @@ function toTaskNode(apiTask: ApiTask): TaskNode {
     priority: apiTask.priority,
     status: apiTask.status,
     category: apiTask.category,
+    tags: apiTask.tags || [],
   };
 }
 
@@ -143,6 +145,7 @@ export async function createTask(task: Omit<TaskNode, 'x' | 'y' | 'fx' | 'fy' | 
       priority: task.priority,
       status: task.status,
       category: task.category,
+      tags: task.tags,
     }),
   });
   return toTaskNode(created);
