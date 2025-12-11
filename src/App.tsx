@@ -92,6 +92,7 @@ function App() {
     title: string; 
     priority: Priority; 
     description?: string;
+    tags?: string[];
   }) => {
     const newTask: TaskNode = {
       id: `task-${Date.now()}`,
@@ -100,6 +101,7 @@ function App() {
       priority: taskData.priority,
       status: 'todo',
       category: 'general',
+      tags: taskData.tags || [],
     };
     await addTask(newTask);
     setShowAddModal(false);
@@ -268,11 +270,13 @@ function AddTaskModal({
   onAdd 
 }: { 
   onClose: () => void; 
-  onAdd: (data: { title: string; priority: Priority; description?: string }) => void;
+  onAdd: (data: { title: string; priority: Priority; description?: string; tags?: string[] }) => void;
 }) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [description, setDescription] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -281,8 +285,31 @@ function AddTaskModal({
         title: title.trim(),
         priority,
         description: description.trim() || undefined,
+        tags,
       });
     }
+  };
+
+  // 태그 추가 핸들러
+  const handleAddTag = () => {
+    const newTag = tagInput.trim();
+    if (newTag && !tags.includes(newTag)) {
+      setTags([...tags, newTag]);
+      setTagInput('');
+    }
+  };
+
+  // 태그 입력 시 Enter 또는 콤마로 추가
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  // 태그 삭제
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   return (
@@ -325,6 +352,79 @@ function AddTaskModal({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* 태그 */}
+          <div className="form-group">
+            <label>태그 (선택)</label>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                placeholder="태그 입력 후 Enter..."
+                value={tagInput}
+                onChange={e => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                onBlur={handleAddTag}
+                style={{ flex: 1 }}
+              />
+              <button 
+                type="button" 
+                onClick={handleAddTag}
+                style={{
+                  padding: '8px 16px',
+                  background: 'rgba(99, 102, 241, 0.2)',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  borderRadius: '8px',
+                  color: '#818cf8',
+                  cursor: 'pointer',
+                }}
+              >
+                추가
+              </button>
+            </div>
+            {/* 태그 목록 */}
+            {tags.length > 0 && (
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '6px', 
+                marginTop: '10px' 
+              }}>
+                {tags.map(tag => (
+                  <span
+                    key={tag}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 10px',
+                      background: 'rgba(99, 102, 241, 0.2)',
+                      border: '1px solid rgba(99, 102, 241, 0.3)',
+                      borderRadius: '20px',
+                      color: '#a5b4fc',
+                      fontSize: '12px',
+                    }}
+                  >
+                    🏷️ {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        padding: '0 2px',
+                        fontSize: '14px',
+                        lineHeight: 1,
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 설명 */}

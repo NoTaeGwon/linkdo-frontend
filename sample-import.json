@@ -8,7 +8,8 @@
       "description": "새로운 웹앱 프로젝트 기획서 작성",
       "priority": "high",
       "status": "done",
-      "category": "work"
+      "category": "work",
+      "tags": ["기획", "문서", "중요"]
     },
     {
       "id": "task-sample-2",
@@ -16,7 +17,8 @@
       "description": "Figma로 UI 목업 제작",
       "priority": "medium",
       "status": "in-progress",
-      "category": "design"
+      "category": "design",
+      "tags": ["디자인", "UI", "Figma"]
     },
     {
       "id": "task-sample-3",
@@ -24,7 +26,8 @@
       "description": "FastAPI로 REST API 구현",
       "priority": "critical",
       "status": "in-progress",
-      "category": "backend"
+      "category": "backend",
+      "tags": ["백엔드", "API", "FastAPI", "Python"]
     },
     {
       "id": "task-sample-4",
@@ -32,7 +35,8 @@
       "description": "React + TypeScript 프론트엔드 구현",
       "priority": "critical",
       "status": "todo",
-      "category": "frontend"
+      "category": "frontend",
+      "tags": ["프론트엔드", "React", "TypeScript"]
     },
     {
       "id": "task-sample-5",
@@ -40,7 +44,8 @@
       "description": "유닛 테스트 및 E2E 테스트",
       "priority": "medium",
       "status": "todo",
-      "category": "testing"
+      "category": "testing",
+      "tags": ["테스트", "QA", "자동화"]
     },
     {
       "id": "task-sample-6",
@@ -48,7 +53,8 @@
       "description": "Docker 컨테이너화 및 CI/CD 설정",
       "priority": "low",
       "status": "todo",
-      "category": "devops"
+      "category": "devops",
+      "tags": ["DevOps", "Docker", "CI/CD"]
     }
   ],
   "edges": [
@@ -84,4 +90,3 @@
     }
   ]
 }
-

@@ -82,6 +82,7 @@ export function useTaskStore() {
                     priority: taskData.priority || 'medium',
                     status: taskData.status || 'todo',
                     category: taskData.category,
+                    tags: taskData.tags || [],
                   });
                 }
                 break;
@@ -242,6 +243,7 @@ export function useTaskStore() {
           priority: task.priority,
           status: task.status,
           category: task.category,
+          tags: task.tags,
         });
         setTasks((prev: TaskNode[]) => [...prev, created]);
         // 로컬 캐시에도 저장
@@ -264,6 +266,7 @@ export function useTaskStore() {
           priority: task.priority,
           status: task.status,
           category: task.category,
+          tags: task.tags,
         },
       });
       setTasks((prev: TaskNode[]) => [...prev, task]);
@@ -477,8 +480,8 @@ export function useTaskStore() {
 
   // JSON 내보내기 (Export)
   const exportData = () => {
-    const cleanTasks = tasks.map(({ id, title, description, priority, status, category }: TaskNode) => ({
-      id, title, description, priority, status, category
+    const cleanTasks = tasks.map(({ id, title, description, priority, status, category, tags }: TaskNode) => ({
+      id, title, description, priority, status, category, tags
     }));
     
     const cleanEdges = edges.map((edge: StoredEdge) => ({
@@ -538,6 +541,7 @@ export function useTaskStore() {
               priority: t.priority || 'medium',
               status: t.status || 'todo',
               category: t.category || 'general',
+              tags: t.tags || [],
             });
             createdTasks.push(created);
           } catch (error) {
@@ -603,6 +607,7 @@ export function useTaskStore() {
             priority: t.priority || 'medium',
             status: t.status || 'todo',
             category: t.category || 'general',
+            tags: t.tags || [],
           };
         });
 
