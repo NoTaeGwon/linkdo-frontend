@@ -10,7 +10,7 @@
  * ================================================================
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Graph, type ViewState } from './components/Graph';
 import { TaskPanel } from './components/TaskPanel';
 import { SearchBar } from './components/SearchBar';
@@ -24,6 +24,8 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [viewState, setViewState] = useState<ViewState>({ zoom: 1, pan: { x: 0, y: 0 } });
   const [linkingMode, setLinkingMode] = useState<string | null>(null); // 연결 모드: 시작 노드 ID
+  const [selectedTags, setSelectedTags] = useState<string[]>([]); // 태그 필터
+  const [showTagFilter, setShowTagFilter] = useState(false); // 태그 필터 드롭다운 표시
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
@@ -45,6 +47,68 @@ function App() {
     exportData,
     importData,
   } = useTaskStore();
+
+  // 전체 태그 목록 추출
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    tasks.forEach(task => {
+      (task.tags || []).forEach(tag => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }, [tasks]);
+
+  // 태그 필터링된 그래프 데이터
+  const filteredGraphData = useMemo(() => {
+    if (selectedTags.length === 0) {
+      return graphData;
+    }
+    
+    // 선택된 태그를 포함하는 태스크만 필터링
+    const filteredNodes = graphData.nodes.filter(node => 
+      selectedTags.some(tag => (node.tags || []).includes(tag))
+    );
+    const filteredNodeIds = new Set(filteredNodes.map(n => n.id));
+    
+    // 필터링된 노드들 사이의 엣지만 유지
+    const filteredEdges = graphData.edges.filter(edge => {
+      const sourceId = typeof edge.source === 'string' ? edge.source : edge.source.id;
+      const targetId = typeof edge.target === 'string' ? edge.target : edge.target.id;
+      return filteredNodeIds.has(sourceId) && filteredNodeIds.has(targetId);
+    });
+
+    return { nodes: filteredNodes, edges: filteredEdges };
+  }, [graphData, selectedTags]);
+
+  // 태그 토글
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  // 모든 태그 필터 해제
+  const clearTagFilter = () => {
+    setSelectedTags([]);
+  };
+
+  // 태그 필터 드롭다운 외부 클릭 시 닫기
+  const tagFilterRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (tagFilterRef.current && !tagFilterRef.current.contains(event.target as Node)) {
+        setShowTagFilter(false);
+      }
+    };
+    
+    if (showTagFilter) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTagFilter]);
 
   // 파일 선택 시 모달 표시
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +195,134 @@ function App() {
           <p className="subtitle">Graph-based Task Visualization</p>
         </div>
         <div className="header-actions">
+          {/* 태그 필터 */}
+          <div ref={tagFilterRef} className="tag-filter-container" style={{ position: 'relative' }}>
+            <button 
+              className={`btn-icon ${selectedTags.length > 0 ? 'active' : ''}`}
+              onClick={() => setShowTagFilter(!showTagFilter)}
+              title="태그 필터"
+              style={{
+                background: selectedTags.length > 0 ? 'rgba(99, 102, 241, 0.3)' : undefined,
+                borderColor: selectedTags.length > 0 ? 'rgba(99, 102, 241, 0.5)' : undefined,
+              }}
+            >
+              🏷️ {selectedTags.length > 0 && <span style={{ 
+                fontSize: '10px', 
+                background: '#6366f1', 
+                borderRadius: '10px', 
+                padding: '1px 6px',
+                marginLeft: '4px',
+              }}>{selectedTags.length}</span>}
+            </button>
+            
+            {/* 태그 필터 드롭다운 */}
+            {showTagFilter && (
+              <div 
+                className="tag-filter-dropdown"
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '8px',
+                  background: 'rgba(15, 23, 42, 0.98)',
+                  border: '1px solid rgba(148, 163, 184, 0.2)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  minWidth: '220px',
+                  maxHeight: '300px',
+                  overflowY: 'auto',
+                  zIndex: 1000,
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                }}
+              >
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: '10px',
+                  paddingBottom: '8px',
+                  borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+                }}>
+                  <span style={{ color: '#94a3b8', fontSize: '12px', fontWeight: '600' }}>
+                    태그 필터
+                  </span>
+                  {selectedTags.length > 0 && (
+                    <button
+                      onClick={clearTagFilter}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#f87171',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      모두 해제
+                    </button>
+                  )}
+                </div>
+                
+                {allTags.length === 0 ? (
+                  <p style={{ color: '#64748b', fontSize: '12px', textAlign: 'center', padding: '10px' }}>
+                    태그가 없습니다
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {allTags.map(tag => (
+                      <button
+                        key={tag}
+                        onClick={() => toggleTag(tag)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 10px',
+                          background: selectedTags.includes(tag) 
+                            ? 'rgba(99, 102, 241, 0.3)' 
+                            : 'rgba(0, 0, 0, 0.2)',
+                          border: '1px solid',
+                          borderColor: selectedTags.includes(tag)
+                            ? 'rgba(99, 102, 241, 0.5)'
+                            : 'transparent',
+                          borderRadius: '8px',
+                          color: selectedTags.includes(tag) ? '#a5b4fc' : '#cbd5e1',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        <span style={{ 
+                          width: '16px', 
+                          height: '16px',
+                          borderRadius: '4px',
+                          border: '2px solid',
+                          borderColor: selectedTags.includes(tag) ? '#6366f1' : '#64748b',
+                          background: selectedTags.includes(tag) ? '#6366f1' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          color: '#fff',
+                        }}>
+                          {selectedTags.includes(tag) && '✓'}
+                        </span>
+                        {tag}
+                        <span style={{ 
+                          marginLeft: 'auto', 
+                          color: '#64748b', 
+                          fontSize: '10px' 
+                        }}>
+                          {tasks.filter(t => (t.tags || []).includes(tag)).length}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* 검색 바 */}
           <SearchBar 
             tasks={tasks} 
@@ -173,8 +365,73 @@ function App() {
 
       {/* 메인 그래프 영역 */}
       <main className="main">
+        {/* 태그 필터 활성화 시 표시 */}
+        {selectedTags.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 16px',
+            background: 'rgba(15, 23, 42, 0.9)',
+            border: '1px solid rgba(99, 102, 241, 0.3)',
+            borderRadius: '20px',
+            zIndex: 100,
+          }}>
+            <span style={{ color: '#94a3b8', fontSize: '12px' }}>필터:</span>
+            {selectedTags.map(tag => (
+              <span
+                key={tag}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  background: 'rgba(99, 102, 241, 0.2)',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                  borderRadius: '12px',
+                  color: '#a5b4fc',
+                  fontSize: '11px',
+                }}
+              >
+                {tag}
+                <button
+                  onClick={() => toggleTag(tag)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    cursor: 'pointer',
+                    padding: '0',
+                    fontSize: '12px',
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={clearTagFilter}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#64748b',
+                fontSize: '11px',
+                cursor: 'pointer',
+                marginLeft: '4px',
+              }}
+            >
+              모두 해제
+            </button>
+          </div>
+        )}
+
         <Graph 
-          data={graphData} 
+          data={filteredGraphData} 
           selectedNodeId={selectedNode?.id || null}
           onNodeSelect={(node) => {
             // 연결 모드일 때

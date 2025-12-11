@@ -228,6 +228,25 @@ export async function deleteEdgeApi(source: string, target: string): Promise<voi
 }
 
 // ================================================================
+// Tags API
+// ================================================================
+
+/**
+ * 전체 태그 목록 조회
+ */
+export async function fetchTags(): Promise<string[]> {
+  return apiRequest<string[]>('/tags');
+}
+
+/**
+ * 태그로 태스크 필터링 조회
+ */
+export async function fetchTasksByTag(tag: string): Promise<TaskNode[]> {
+  const tasks = await apiRequest<ApiTask[]>(`/tasks?tag=${encodeURIComponent(tag)}`);
+  return tasks.map(toTaskNode);
+}
+
+// ================================================================
 // 헬스 체크
 // ================================================================
 
