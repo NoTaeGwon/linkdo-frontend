@@ -246,6 +246,37 @@ export async function fetchTasksByTag(tag: string): Promise<TaskNode[]> {
   return tasks.map(toTaskNode);
 }
 
+/**
+ * 태그 추천 API 응답 타입
+ */
+interface SuggestTagsResponse {
+  tags: string[];
+}
+
+/**
+ * LLM을 이용한 태그 추천
+ * @param title 태스크 제목
+ * @param description 태스크 설명 (선택)
+ * @returns 추천 태그 목록
+ */
+export async function suggestTags(title: string, description?: string): Promise<string[]> {
+  const response = await apiRequest<SuggestTagsResponse>('/tags/suggest-tags', {
+    method: 'POST',
+    body: JSON.stringify({
+      title,
+      description: description || '',
+    }),
+  });
+  
+  // 응답에서 tags 배열 추출
+  if (response && response.tags && Array.isArray(response.tags)) {
+    return response.tags.map(tag => String(tag).trim()).filter(tag => tag.length > 0);
+  }
+  
+  console.warn('예상치 못한 API 응답 형식:', response);
+  return [];
+}
+
 // ================================================================
 // 헬스 체크
 // ================================================================

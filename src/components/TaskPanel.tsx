@@ -19,6 +19,7 @@ import { CATEGORY_COLORS } from '../data/sampleData';
 interface TaskPanelProps {
   selectedNode: TaskNode | null;
   isDemoMode?: boolean;
+  isApiAvailable?: boolean;
   allTasks?: TaskNode[];
   connectedNodeIds?: string[];
   onClose: () => void;
@@ -31,6 +32,7 @@ interface TaskPanelProps {
 export function TaskPanel({ 
   selectedNode, 
   isDemoMode = false,
+  isApiAvailable = false,
   allTasks = [],
   connectedNodeIds = [],
   onClose, 
@@ -47,6 +49,11 @@ export function TaskPanel({
   const [editTags, setEditTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // 태그 추천 관련 상태
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
   // selectedNode가 변경되면 수정 모드 종료
   useEffect(() => {
@@ -66,6 +73,8 @@ export function TaskPanel({
     setEditStatus(selectedNode.status);
     setEditTags(selectedNode.tags || []);
     setTagInput('');
+    setSuggestedTags([]);
+    setSuggestionError(null);
     setIsEditing(true);
   };
 
@@ -81,6 +90,50 @@ export function TaskPanel({
   // 태그 삭제
   const handleRemoveTag = (tagToRemove: string) => {
     setEditTags(editTags.filter(tag => tag !== tagToRemove));
+  };
+
+  // 태그 추천 요청
+  const handleSuggestTags = async () => {
+    if (!editTitle.trim()) {
+      setSuggestionError('제목을 먼저 입력해주세요');
+      return;
+    }
+    
+    setIsLoadingSuggestions(true);
+    setSuggestionError(null);
+    setSuggestedTags([]);
+    
+    try {
+      const { suggestTags } = await import('../api');
+      const suggestions = await suggestTags(editTitle.trim(), editDescription.trim());
+      // 이미 추가된 태그는 제외
+      const newSuggestions = suggestions.filter(s => !editTags.includes(s));
+      setSuggestedTags(newSuggestions);
+      
+      if (newSuggestions.length === 0 && suggestions.length > 0) {
+        setSuggestionError('추천된 태그가 모두 이미 추가되어 있습니다');
+      }
+    } catch (error) {
+      console.error('태그 추천 실패:', error);
+      setSuggestionError('태그 추천에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // 추천 태그 추가
+  const handleAddSuggestedTag = (tag: string) => {
+    if (!editTags.includes(tag)) {
+      setEditTags([...editTags, tag]);
+      setSuggestedTags(suggestedTags.filter(s => s !== tag));
+    }
+  };
+
+  // 추천 태그 모두 추가
+  const handleAddAllSuggestedTags = () => {
+    const newTags = suggestedTags.filter(s => !editTags.includes(s));
+    setEditTags([...editTags, ...newTags]);
+    setSuggestedTags([]);
   };
 
   // 수정 저장
@@ -446,6 +499,121 @@ export function TaskPanel({
                       </button>
                     </span>
                   ))}
+                </div>
+              )}
+
+              {/* AI 태그 추천 버튼 */}
+              <button
+                type="button"
+                onClick={handleSuggestTags}
+                disabled={isLoadingSuggestions || !editTitle.trim() || !isApiAvailable}
+                title={!isApiAvailable ? '서버에 연결되어 있지 않습니다' : ''}
+                style={{
+                  marginTop: '10px',
+                  padding: '6px 12px',
+                  background: !isApiAvailable
+                    ? 'rgba(100, 116, 139, 0.2)'
+                    : isLoadingSuggestions 
+                      ? 'rgba(168, 85, 247, 0.3)' 
+                      : 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))',
+                  border: `1px solid ${!isApiAvailable ? 'rgba(100, 116, 139, 0.3)' : 'rgba(168, 85, 247, 0.4)'}`,
+                  borderRadius: '6px',
+                  color: !isApiAvailable ? '#64748b' : isLoadingSuggestions ? '#c084fc' : '#e879f9',
+                  cursor: isLoadingSuggestions || !editTitle.trim() || !isApiAvailable ? 'not-allowed' : 'pointer',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  opacity: !editTitle.trim() || !isApiAvailable ? 0.5 : 1,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {!isApiAvailable ? (
+                  <>📡 서버 연결 필요</>
+                ) : isLoadingSuggestions ? (
+                  <>⏳ AI 분석 중...</>
+                ) : (
+                  <>🪄 AI 태그 추천</>
+                )}
+              </button>
+
+              {/* 에러 메시지 */}
+              {suggestionError && (
+                <div style={{
+                  marginTop: '6px',
+                  padding: '6px 10px',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '6px',
+                  color: '#f87171',
+                  fontSize: '11px',
+                }}>
+                  {suggestionError}
+                </div>
+              )}
+
+              {/* 추천 태그 표시 */}
+              {suggestedTags.length > 0 && (
+                <div style={{
+                  marginTop: '10px',
+                  padding: '10px',
+                  background: 'rgba(168, 85, 247, 0.1)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                  borderRadius: '8px',
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '6px',
+                  }}>
+                    <span style={{ color: '#c084fc', fontSize: '11px', fontWeight: 500 }}>
+                      ✨ 추천 태그
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleAddAllSuggestedTags}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#a78bfa',
+                        fontSize: '10px',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      모두 추가
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {suggestedTags.map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => handleAddSuggestedTag(tag)}
+                        style={{
+                          padding: '4px 10px',
+                          background: 'rgba(168, 85, 247, 0.15)',
+                          border: '1px dashed rgba(168, 85, 247, 0.4)',
+                          borderRadius: '12px',
+                          color: '#d8b4fe',
+                          fontSize: '10px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+                          e.currentTarget.style.borderStyle = 'solid';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)';
+                          e.currentTarget.style.borderStyle = 'dashed';
+                        }}
+                      >
+                        + {tag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

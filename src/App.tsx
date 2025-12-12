@@ -37,6 +37,7 @@ function App() {
     graphData, 
     isLoading, 
     isDemoMode, 
+    isApiAvailable,
     tasks,
     addTask, 
     updateTask, 
@@ -459,6 +460,7 @@ function App() {
         <TaskPanel
           selectedNode={selectedNode}
           isDemoMode={isDemoMode}
+          isApiAvailable={isApiAvailable}
           allTasks={tasks}
           connectedNodeIds={selectedNode ? getConnectedNodeIds(selectedNode.id) : []}
           onClose={() => setSelectedNode(null)}
@@ -502,6 +504,7 @@ function App() {
         <AddTaskModal
           onClose={() => setShowAddModal(false)}
           onAdd={handleAddTask}
+          isApiAvailable={isApiAvailable}
         />
       )}
 
@@ -524,16 +527,23 @@ function App() {
 // Add Task 모달 컴포넌트
 function AddTaskModal({ 
   onClose, 
-  onAdd 
+  onAdd,
+  isApiAvailable = false,
 }: { 
   onClose: () => void; 
   onAdd: (data: { title: string; priority: Priority; description?: string; tags?: string[] }) => void;
+  isApiAvailable?: boolean;
 }) {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  
+  // 태그 추천 관련 상태
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [suggestionError, setSuggestionError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -567,6 +577,50 @@ function AddTaskModal({
   // 태그 삭제
   const handleRemoveTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  // 태그 추천 요청
+  const handleSuggestTags = async () => {
+    if (!title.trim()) {
+      setSuggestionError('제목을 먼저 입력해주세요');
+      return;
+    }
+    
+    setIsLoadingSuggestions(true);
+    setSuggestionError(null);
+    setSuggestedTags([]);
+    
+    try {
+      const { suggestTags } = await import('./api');
+      const suggestions = await suggestTags(title.trim(), description.trim());
+      // 이미 추가된 태그는 제외
+      const newSuggestions = suggestions.filter(s => !tags.includes(s));
+      setSuggestedTags(newSuggestions);
+      
+      if (newSuggestions.length === 0 && suggestions.length > 0) {
+        setSuggestionError('추천된 태그가 모두 이미 추가되어 있습니다');
+      }
+    } catch (error) {
+      console.error('태그 추천 실패:', error);
+      setSuggestionError('태그 추천에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // 추천 태그 추가
+  const handleAddSuggestedTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      setTags([...tags, tag]);
+      setSuggestedTags(suggestedTags.filter(s => s !== tag));
+    }
+  };
+
+  // 추천 태그 모두 추가
+  const handleAddAllSuggestedTags = () => {
+    const newTags = suggestedTags.filter(s => !tags.includes(s));
+    setTags([...tags, ...newTags]);
+    setSuggestedTags([]);
   };
 
   return (
@@ -680,6 +734,142 @@ function AddTaskModal({
                     </button>
                   </span>
                 ))}
+              </div>
+            )}
+
+            {/* AI 태그 추천 버튼 */}
+            <button
+              type="button"
+              onClick={handleSuggestTags}
+              disabled={isLoadingSuggestions || !title.trim() || !isApiAvailable}
+              title={!isApiAvailable ? '서버에 연결되어 있지 않습니다' : ''}
+              style={{
+                marginTop: '12px',
+                padding: '8px 16px',
+                background: !isApiAvailable
+                  ? 'rgba(100, 116, 139, 0.2)'
+                  : isLoadingSuggestions 
+                    ? 'rgba(168, 85, 247, 0.3)' 
+                    : 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))',
+                border: `1px solid ${!isApiAvailable ? 'rgba(100, 116, 139, 0.3)' : 'rgba(168, 85, 247, 0.4)'}`,
+                borderRadius: '8px',
+                color: !isApiAvailable ? '#64748b' : isLoadingSuggestions ? '#c084fc' : '#e879f9',
+                cursor: isLoadingSuggestions || !title.trim() || !isApiAvailable ? 'not-allowed' : 'pointer',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                opacity: !title.trim() || !isApiAvailable ? 0.5 : 1,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {!isApiAvailable ? (
+                <>
+                  📡 서버 연결 필요
+                </>
+              ) : isLoadingSuggestions ? (
+                <>
+                  <span style={{ 
+                    display: 'inline-block',
+                    animation: 'spin 1s linear infinite',
+                  }}>⏳</span>
+                  AI가 분석 중...
+                </>
+              ) : (
+                <>
+                  🪄 AI 태그 추천
+                </>
+              )}
+            </button>
+
+            {/* 에러 메시지 */}
+            {suggestionError && (
+              <div style={{
+                marginTop: '8px',
+                padding: '8px 12px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '8px',
+                color: '#f87171',
+                fontSize: '12px',
+              }}>
+                {suggestionError}
+              </div>
+            )}
+
+            {/* 추천 태그 표시 */}
+            {suggestedTags.length > 0 && (
+              <div style={{
+                marginTop: '12px',
+                padding: '12px',
+                background: 'rgba(168, 85, 247, 0.1)',
+                border: '1px solid rgba(168, 85, 247, 0.2)',
+                borderRadius: '10px',
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px',
+                }}>
+                  <span style={{ 
+                    color: '#c084fc', 
+                    fontSize: '12px',
+                    fontWeight: 500,
+                  }}>
+                    ✨ 추천 태그 (클릭하여 추가)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAddAllSuggestedTags}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#a78bfa',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    모두 추가
+                  </button>
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '6px',
+                }}>
+                  {suggestedTags.map(tag => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleAddSuggestedTag(tag)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '5px 12px',
+                        background: 'rgba(168, 85, 247, 0.15)',
+                        border: '1px dashed rgba(168, 85, 247, 0.4)',
+                        borderRadius: '20px',
+                        color: '#d8b4fe',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(168, 85, 247, 0.3)';
+                        e.currentTarget.style.borderStyle = 'solid';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)';
+                        e.currentTarget.style.borderStyle = 'dashed';
+                      }}
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
