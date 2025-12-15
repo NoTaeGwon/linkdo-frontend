@@ -25,6 +25,8 @@ interface ApiTask {
   status: TaskStatus;
   category?: string;
   tags: string[];
+  x?: number;  // PCA 계산된 X 좌표
+  y?: number;  // PCA 계산된 Y 좌표
 }
 
 /**
@@ -67,7 +69,15 @@ async function apiRequest<T>(
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `API 요청 실패: ${response.statusText}`);
+    // 에러 응답 본문 확인
+    let errorDetail = response.statusText;
+    try {
+      const errorBody = await response.json();
+      errorDetail = errorBody.detail || errorBody.message || JSON.stringify(errorBody);
+    } catch {
+      // JSON 파싱 실패 시 기본 메시지 사용
+    }
+    throw new ApiError(response.status, `API 요청 실패: ${errorDetail}`);
   }
 
   // DELETE 요청은 204 No Content를 반환할 수 있음
@@ -90,6 +100,8 @@ function toTaskNode(apiTask: ApiTask): TaskNode {
     status: apiTask.status,
     category: apiTask.category,
     tags: apiTask.tags || [],
+    x: apiTask.x,  // PCA 좌표
+    y: apiTask.y,  // PCA 좌표
   };
 }
 
@@ -150,6 +162,7 @@ export async function createTask(task: Omit<TaskNode, 'x' | 'y' | 'fx' | 'fy' | 
   });
   return toTaskNode(created);
 }
+
 
 /**
  * 태스크 조회
@@ -275,6 +288,30 @@ export async function suggestTags(title: string, description?: string): Promise<
   
   console.warn('예상치 못한 API 응답 형식:', response);
   return [];
+}
+
+// ================================================================
+// Graph Auto-Arrange API (PCA 기반)
+// ================================================================
+
+/**
+ * 자동정렬 응답 타입
+ */
+export interface AutoArrangePosition {
+  id: string;
+  x: number;
+  y: number;
+}
+
+/**
+ * PCA 기반 자동정렬 (좌표만 반환)
+ * 모든 태스크를 PCA로 재정렬하여 좌표 반환
+ */
+export async function autoArrange(): Promise<AutoArrangePosition[]> {
+  const response = await apiRequest<{ positions: AutoArrangePosition[] }>('/graph/auto-arrange', {
+    method: 'POST',
+  });
+  return response.positions;
 }
 
 // ================================================================

@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "exportedAt": "2025-12-16T10:00:00.000Z",
+  "tasks": [
+    {
+      "id": "task-fe-1",
+      "title": "React 컴포넌트 리팩토링",
+      "description": "기존 클래스 컴포넌트를 함수형 컴포넌트로 변환",
+      "priority": "high",
+      "status": "in-progress",
+      "category": "frontend",
+      "tags": ["React", "프론트엔드", "리팩토링"]
+    },
+    {
+      "id": "task-fe-2",
+      "title": "TypeScript 마이그레이션",
+      "description": "JavaScript 파일을 TypeScript로 전환",
+      "priority": "high",
+      "status": "todo",
+      "category": "frontend",
+      "tags": ["TypeScript", "프론트엔드", "마이그레이션"]
+    },
+    {
+      "id": "task-fe-3",
+      "title": "UI 디자인 시스템 구축",
+      "description": "재사용 가능한 컴포넌트 라이브러리 구축",
+      "priority": "medium",
+      "status": "todo",
+      "category": "frontend",
+      "tags": ["React", "프론트엔드", "디자인", "UI"]
+    },
+    {
+      "id": "task-be-1",
+      "title": "REST API 개발",
+      "description": "사용자 인증 API 엔드포인트 구현",
+      "priority": "critical",
+      "status": "in-progress",
+      "category": "backend",
+      "tags": ["API", "백엔드", "인증"]
+    },
+    {
+      "id": "task-be-2",
+      "title": "데이터베이스 최적화",
+      "description": "MongoDB 인덱스 최적화 및 쿼리 개선",
+      "priority": "high",
+      "status": "todo",
+      "category": "backend",
+      "tags": ["MongoDB", "백엔드", "최적화"]
+    },
+    {
+      "id": "task-be-3",
+      "title": "API 문서화",
+      "description": "Swagger를 이용한 API 문서 자동 생성",
+      "priority": "medium",
+      "status": "todo",
+      "category": "backend",
+      "tags": ["API", "백엔드", "문서화"]
+    },
+    {
+      "id": "task-study-1",
+      "title": "알고리즘 문제 풀기",
+      "description": "백준 골드 문제 10개 풀기",
+      "priority": "medium",
+      "status": "in-progress",
+      "category": "study",
+      "tags": ["알고리즘", "학습", "코딩테스트"]
+    },
+    {
+      "id": "task-study-2",
+      "title": "시스템 디자인 공부",
+      "description": "대규모 시스템 설계 패턴 학습",
+      "priority": "medium",
+      "status": "todo",
+      "category": "study",
+      "tags": ["시스템디자인", "학습", "아키텍처"]
+    },
+    {
+      "id": "task-study-3",
+      "title": "React 공식 문서 정독",
+      "description": "React 18 새로운 기능 학습",
+      "priority": "low",
+      "status": "todo",
+      "category": "study",
+      "tags": ["React", "학습", "프론트엔드"]
+    },
+    {
+      "id": "task-life-1",
+      "title": "운동하기",
+      "description": "헬스장에서 1시간 운동",
+      "priority": "medium",
+      "status": "todo",
+      "category": "life",
+      "tags": ["건강", "일상", "운동"]
+    },
+    {
+      "id": "task-life-2",
+      "title": "독서 30분",
+      "description": "자기계발서 읽기",
+      "priority": "low",
+      "status": "todo",
+      "category": "life",
+      "tags": ["독서", "일상", "자기계발"]
+    },
+    {
+      "id": "task-life-3",
+      "title": "영어 공부",
+      "description": "영어 회화 앱으로 20분 학습",
+      "priority": "low",
+      "status": "todo",
+      "category": "life",
+      "tags": ["영어", "학습", "일상"]
+    },
+    {
+      "id": "task-devops-1",
+      "title": "CI/CD 파이프라인 구축",
+      "description": "GitHub Actions로 자동 배포 설정",
+      "priority": "high",
+      "status": "todo",
+      "category": "devops",
+      "tags": ["DevOps", "CI/CD", "배포"]
+    },
+    {
+      "id": "task-devops-2",
+      "title": "Docker 컨테이너화",
+      "description": "애플리케이션 Docker 이미지 빌드",
+      "priority": "medium",
+      "status": "todo",
+      "category": "devops",
+      "tags": ["Docker", "DevOps", "컨테이너"]
+    },
+    {
+      "id": "task-test-1",
+      "title": "유닛 테스트 작성",
+      "description": "핵심 기능 테스트 코드 작성",
+      "priority": "high",
+      "status": "todo",
+      "category": "testing",
+      "tags": ["테스트", "프론트엔드", "품질"]
+    }
+  ],
+  "edges": []
+}
+

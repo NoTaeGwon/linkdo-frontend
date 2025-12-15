@@ -27,10 +27,7 @@ function App() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]); // 태그 필터
   const [showTagFilter, setShowTagFilter] = useState(false); // 태그 필터 드롭다운 표시
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [importMessage, setImportMessage] = useState<string | null>(null);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [showImportModal, setShowImportModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // useTaskStore 훅 사용
   const { 
@@ -47,7 +44,13 @@ function App() {
     getConnectedNodeIds,
     exportData,
     importData,
+    autoArrange,
   } = useTaskStore();
+
+  // 자동정렬 관련 상태
+  const [showAutoArrangeModal, setShowAutoArrangeModal] = useState(false);
+  const [isAutoArranging, setIsAutoArranging] = useState(false);
+  const [autoArrangeProgress, setAutoArrangeProgress] = useState({ current: 0, total: 0, taskTitle: '' });
 
   // 전체 태그 목록 추출
   const allTags = useMemo(() => {
@@ -111,35 +114,6 @@ function App() {
     };
   }, [showTagFilter]);
 
-  // 파일 선택 시 모달 표시
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPendingFile(file);
-    setShowImportModal(true);
-    
-    // 파일 input 초기화
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  // 가져오기 실행
-  const handleImport = async (mode: 'replace' | 'merge') => {
-    if (!pendingFile) return;
-
-    const result = await importData(pendingFile, mode);
-    setImportMessage(result.message);
-    
-    // 토스트 메시지 자동 제거
-    setTimeout(() => setImportMessage(null), TOAST_DURATION);
-    
-    // 정리
-    setPendingFile(null);
-    setShowImportModal(false);
-  };
-
   // 로딩 중
   if (isLoading) {
     return (
@@ -172,6 +146,7 @@ function App() {
     setShowAddModal(false);
     
     // 새 태스크를 선택 (시뮬레이션이 안정화될 때까지 대기)
+    // 참고: 위치 계산은 addTask 내에서 createTaskWithPosition API로 처리됨
     setTimeout(() => {
       setSelectedNode(newTask);
     }, TASK_SELECT_DELAY);
@@ -329,37 +304,26 @@ function App() {
             tasks={tasks} 
             onSelectTask={(task) => setSelectedNode(task)} 
           />
-          
-          {/* 백업/복원 버튼 */}
-          <div className="backup-buttons">
-            <button 
-              className="btn-icon"
-              onClick={exportData}
-              title="데이터 내보내기 (백업)"
-            >
-              📤
-            </button>
-            <button 
-              className="btn-icon"
-              onClick={() => fileInputRef.current?.click()}
-              title="데이터 가져오기 (복원)"
-            >
-              📥
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleFileSelect}
-              style={{ display: 'none' }}
-            />
-          </div>
 
           <button 
             className="btn-secondary"
             onClick={() => setShowAddModal(true)}
           >
             <span>+</span> Add Task
+          </button>
+
+          {/* 자동정렬 버튼 */}
+          <button 
+            className="btn-secondary"
+            onClick={() => setShowAutoArrangeModal(true)}
+            disabled={!isApiAvailable || tasks.length < 2}
+            title={!isApiAvailable ? '서버 연결 필요' : tasks.length < 2 ? '태스크가 2개 이상 필요합니다' : 'PCA 기반 자동 배치'}
+            style={{
+              opacity: (!isApiAvailable || tasks.length < 2) ? 0.5 : 1,
+              cursor: (!isApiAvailable || tasks.length < 2) ? 'not-allowed' : 'pointer',
+            }}
+          >
+            <span>📍</span> 자동정렬
           </button>
         </div>
       </header>
@@ -492,48 +456,87 @@ function App() {
         <span>💡</span> 노드를 클릭하면 연결된 태스크가 강조됩니다 · 드래그로 위치 조정
       </div>
 
-      {/* Import 메시지 */}
-      {importMessage && (
+      {/* 토스트 메시지 */}
+      {toastMessage && (
         <div className="toast-message">
-          {importMessage}
+          {toastMessage}
         </div>
       )}
 
-      {/* Add Task 모달 */}
+      {/* Add Task 모달 (탭: 새 태스크 / 데이터 관리) */}
       {showAddModal && (
         <AddTaskModal
           onClose={() => setShowAddModal(false)}
           onAdd={handleAddTask}
           isApiAvailable={isApiAvailable}
+          onExport={exportData}
+          onImport={async (file, mode) => {
+            const result = await importData(file, mode);
+            if (result.success) {
+              setToastMessage(result.message);
+              setTimeout(() => setToastMessage(null), TOAST_DURATION);
+            }
+            return result;
+          }}
         />
       )}
 
-      {/* Import 선택 모달 */}
-      {showImportModal && (
-        <ImportModal
-          fileName={pendingFile?.name || ''}
-          onReplace={() => handleImport('replace')}
-          onMerge={() => handleImport('merge')}
-          onClose={() => {
-            setShowImportModal(false);
-            setPendingFile(null);
+      {/* 자동정렬 확인 모달 */}
+      {showAutoArrangeModal && (
+        <AutoArrangeModal
+          onClose={() => setShowAutoArrangeModal(false)}
+          onArrange={async () => {
+            setShowAutoArrangeModal(false);
+            setIsAutoArranging(true);
+            setAutoArrangeProgress({ current: 0, total: 100, taskTitle: '' });
+            
+            try {
+              const result = await autoArrange(
+                (current, total, message) => {
+                  setAutoArrangeProgress({ current, total, taskTitle: message });
+                }
+              );
+              const message = `✅ 자동정렬 완료: ${result.updated}개 태스크 위치 업데이트`;
+              setToastMessage(message);
+              setTimeout(() => setToastMessage(null), TOAST_DURATION);
+            } catch (error) {
+              console.error('자동정렬 실패:', error);
+              setToastMessage(`❌ 자동정렬 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+              setTimeout(() => setToastMessage(null), TOAST_DURATION);
+            } finally {
+              setIsAutoArranging(false);
+            }
           }}
+        />
+      )}
+
+      {/* 자동정렬 로딩 오버레이 */}
+      {isAutoArranging && (
+        <LoadingOverlay
+          current={autoArrangeProgress.current}
+          total={autoArrangeProgress.total}
+          taskTitle={autoArrangeProgress.taskTitle}
         />
       )}
     </div>
   );
 }
 
-// Add Task 모달 컴포넌트
+// Add Task 모달 컴포넌트 (탭 형태: 새 태스크 / 데이터 관리)
 function AddTaskModal({ 
   onClose, 
   onAdd,
   isApiAvailable = false,
+  onExport,
+  onImport,
 }: { 
   onClose: () => void; 
   onAdd: (data: { title: string; priority: Priority; description?: string; tags?: string[] }) => void;
   isApiAvailable?: boolean;
+  onExport: () => void;
+  onImport: (file: File, mode: 'replace' | 'merge') => Promise<{ success: boolean; message: string }>;
 }) {
+  const [activeTab, setActiveTab] = useState<'add' | 'data'>('add');
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [description, setDescription] = useState('');
@@ -544,6 +547,11 @@ function AddTaskModal({
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [suggestionError, setSuggestionError] = useState<string | null>(null);
+
+  // 데이터 관리 탭 상태
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -623,10 +631,84 @@ function AddTaskModal({
     setSuggestedTags([]);
   };
 
+  // 파일 선택 핸들러
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setImportMessage(null);
+    }
+  };
+
+  // 가져오기 실행
+  const handleImportAction = async (mode: 'replace' | 'merge') => {
+    if (!selectedFile) return;
+    
+    const result = await onImport(selectedFile, mode);
+    setImportMessage({
+      type: result.success ? 'success' : 'error',
+      text: result.message,
+    });
+    
+    if (result.success) {
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-large" onClick={e => e.stopPropagation()}>
-        <h2>새 할 일 추가</h2>
+        {/* 탭 헤더 */}
+        <div style={{
+          display: 'flex',
+          gap: '4px',
+          marginBottom: '20px',
+          borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
+          paddingBottom: '12px',
+        }}>
+          <button
+            type="button"
+            onClick={() => setActiveTab('add')}
+            style={{
+              padding: '10px 20px',
+              background: activeTab === 'add' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+              border: '1px solid',
+              borderColor: activeTab === 'add' ? 'rgba(99, 102, 241, 0.4)' : 'transparent',
+              borderRadius: '8px',
+              color: activeTab === 'add' ? '#a5b4fc' : '#64748b',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: activeTab === 'add' ? '600' : '400',
+              transition: 'all 0.2s',
+            }}
+          >
+            ➕ 새 태스크
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('data')}
+            style={{
+              padding: '10px 20px',
+              background: activeTab === 'data' ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+              border: '1px solid',
+              borderColor: activeTab === 'data' ? 'rgba(34, 197, 94, 0.4)' : 'transparent',
+              borderRadius: '8px',
+              color: activeTab === 'data' ? '#4ade80' : '#64748b',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: activeTab === 'data' ? '600' : '400',
+              transition: 'all 0.2s',
+            }}
+          >
+            📂 데이터 관리
+          </button>
+        </div>
+
+        {/* 새 태스크 탭 */}
+        {activeTab === 'add' && (
         <form onSubmit={handleSubmit}>
           {/* 제목 */}
           <div className="form-group">
@@ -894,82 +976,316 @@ function AddTaskModal({
             </button>
           </div>
         </form>
+        )}
+
+        {/* 데이터 관리 탭 */}
+        {activeTab === 'data' && (
+          <div>
+            {/* 내보내기 섹션 */}
+            <div style={{
+              padding: '20px',
+              background: 'rgba(99, 102, 241, 0.1)',
+              border: '1px solid rgba(99, 102, 241, 0.2)',
+              borderRadius: '12px',
+              marginBottom: '20px',
+            }}>
+              <h3 style={{ color: '#a5b4fc', fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📤 데이터 내보내기
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '16px' }}>
+                현재 모든 태스크와 연결 정보를 JSON 파일로 저장합니다.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  onExport();
+                  setImportMessage({ type: 'success', text: '데이터를 내보냈습니다!' });
+                }}
+                style={{
+                  padding: '12px 24px',
+                  background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                }}
+              >
+                📤 JSON 파일로 내보내기
+              </button>
+            </div>
+
+            {/* 가져오기 섹션 */}
+            <div style={{
+              padding: '20px',
+              background: 'rgba(34, 197, 94, 0.1)',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: '#4ade80', fontSize: '16px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📥 데이터 가져오기
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '16px' }}>
+                JSON 파일에서 태스크를 불러옵니다.
+              </p>
+
+              {/* 파일 선택 */}
+              <div style={{ marginBottom: '16px' }}>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    padding: '12px 24px',
+                    background: 'rgba(34, 197, 94, 0.2)',
+                    border: '1px solid rgba(34, 197, 94, 0.4)',
+                    borderRadius: '8px',
+                    color: '#4ade80',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                  }}
+                >
+                  📁 파일 선택
+                </button>
+                {selectedFile && (
+                  <span style={{ marginLeft: '12px', color: '#e2e8f0', fontSize: '13px' }}>
+                    {selectedFile.name}
+                  </span>
+                )}
+              </div>
+
+              {/* 가져오기 옵션 */}
+              {selectedFile && (
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleImportAction('replace')}
+                    style={{
+                      padding: '12px 20px',
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '8px',
+                      color: '#f87171',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                    }}
+                  >
+                    🔄 덮어쓰기
+                    <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                      기존 데이터 삭제 후 교체
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleImportAction('merge')}
+                    style={{
+                      padding: '12px 20px',
+                      background: 'rgba(34, 197, 94, 0.15)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)',
+                      borderRadius: '8px',
+                      color: '#4ade80',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                    }}
+                  >
+                    ➕ 병합하기
+                    <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                      기존 데이터 유지 + 추가
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* 메시지 표시 */}
+              {importMessage && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px 16px',
+                  background: importMessage.type === 'success' 
+                    ? 'rgba(34, 197, 94, 0.1)' 
+                    : 'rgba(239, 68, 68, 0.1)',
+                  border: `1px solid ${importMessage.type === 'success' 
+                    ? 'rgba(34, 197, 94, 0.3)' 
+                    : 'rgba(239, 68, 68, 0.3)'}`,
+                  borderRadius: '8px',
+                  color: importMessage.type === 'success' ? '#4ade80' : '#f87171',
+                  fontSize: '13px',
+                }}>
+                  {importMessage.type === 'success' ? '✅' : '❌'} {importMessage.text}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-actions" style={{ marginTop: '20px' }}>
+              <button type="button" className="btn-cancel" onClick={onClose}>
+                닫기
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// Import 선택 모달 컴포넌트
-function ImportModal({
-  fileName,
-  onReplace,
-  onMerge,
+// 자동정렬 확인 모달 컴포넌트
+function AutoArrangeModal({
   onClose,
+  onArrange,
 }: {
-  fileName: string;
-  onReplace: () => void;
-  onMerge: () => void;
   onClose: () => void;
+  onArrange: () => void;
 }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
-        <h2>📥 데이터 가져오기</h2>
+        <h2>📍 자동정렬</h2>
         <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '8px' }}>
-          파일: <strong style={{ color: '#e2e8f0' }}>{fileName}</strong>
+          PCA 기반으로 태스크를 자동 배치합니다
         </p>
         <p style={{ color: '#64748b', fontSize: '13px', marginBottom: '20px' }}>
-          가져오기 방식을 선택하세요
+          의미적으로 유사한 태스크들이 가까운 위치에 배치됩니다
         </p>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <button
-            onClick={onReplace}
-            style={{
-              padding: '16px',
-              background: 'rgba(239, 68, 68, 0.15)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'all 0.2s',
-            }}
-          >
-            <div style={{ color: '#f87171', fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
-              🔄 덮어쓰기
-            </div>
-            <div style={{ color: '#94a3b8', fontSize: '12px' }}>
-              기존 데이터를 삭제하고 새 데이터로 교체합니다
-            </div>
-          </button>
-
-          <button
-            onClick={onMerge}
-            style={{
-              padding: '16px',
-              background: 'rgba(34, 197, 94, 0.15)',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'all 0.2s',
-            }}
-          >
-            <div style={{ color: '#4ade80', fontSize: '15px', fontWeight: '600', marginBottom: '4px' }}>
-              ➕ 병합하기
-            </div>
-            <div style={{ color: '#94a3b8', fontSize: '12px' }}>
-              기존 데이터를 유지하고 새 데이터를 추가합니다
-            </div>
-          </button>
+        <div style={{ 
+          padding: '16px',
+          background: 'rgba(99, 102, 241, 0.1)',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+          borderRadius: '10px',
+          marginBottom: '20px',
+        }}>
+          <div style={{ color: '#a5b4fc', fontSize: '13px', marginBottom: '8px' }}>
+            ℹ️ 안내
+          </div>
+          <ul style={{ color: '#94a3b8', fontSize: '12px', paddingLeft: '20px', margin: 0 }}>
+            <li style={{ marginBottom: '4px' }}>임베딩 기반 PCA 분석으로 좌표를 계산합니다</li>
+            <li style={{ marginBottom: '4px' }}>엣지(연결선)는 태스크 생성 시 자동으로 연결됩니다</li>
+            <li>기존 연결은 그대로 유지됩니다</li>
+          </ul>
         </div>
 
-        <div className="modal-actions" style={{ marginTop: '20px' }}>
+        <div className="modal-actions">
           <button className="btn-cancel" onClick={onClose}>
             취소
           </button>
+          <button 
+            className="btn-primary" 
+            onClick={onArrange}
+            style={{
+              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            }}
+          >
+            🔄 자동정렬 실행
+          </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// 로딩 오버레이 컴포넌트
+function LoadingOverlay({
+  current,
+  total,
+  taskTitle,
+}: {
+  current: number;
+  total: number;
+  taskTitle: string;
+}) {
+  const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.8)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 9999,
+    }}>
+      {/* 스피너 */}
+      <div style={{
+        width: '60px',
+        height: '60px',
+        border: '4px solid rgba(99, 102, 241, 0.3)',
+        borderTopColor: '#6366f1',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        marginBottom: '24px',
+      }} />
+      
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+      
+      {/* 제목 */}
+      <h2 style={{
+        color: '#e2e8f0',
+        fontSize: '20px',
+        fontWeight: '600',
+        marginBottom: '16px',
+      }}>
+        📍 자동정렬 진행 중...
+      </h2>
+      
+      {/* 진행률 바 */}
+      <div style={{
+        width: '300px',
+        height: '8px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '4px',
+        overflow: 'hidden',
+        marginBottom: '12px',
+      }}>
+        <div style={{
+          width: `${percentage}%`,
+          height: '100%',
+          background: 'linear-gradient(90deg, #6366f1, #8b5cf6)',
+          borderRadius: '4px',
+          transition: 'width 0.3s ease',
+        }} />
+      </div>
+      
+      {/* 진행률 텍스트 */}
+      <p style={{
+        color: '#a5b4fc',
+        fontSize: '16px',
+        fontWeight: '500',
+        marginBottom: '8px',
+      }}>
+        {current} / {total} ({percentage}%)
+      </p>
+      
+      {/* 현재 처리 중인 태스크 */}
+      {taskTitle && (
+        <p style={{
+          color: '#64748b',
+          fontSize: '14px',
+          maxWidth: '300px',
+          textAlign: 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          "{taskTitle}" 분석 중...
+        </p>
+      )}
     </div>
   );
 }

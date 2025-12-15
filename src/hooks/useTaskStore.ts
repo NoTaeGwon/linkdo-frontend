@@ -138,19 +138,38 @@ export function useTaskStore() {
   // 데이터 로드
   // ================================================================
 
+  // 중복 제거 유틸리티 함수
+  const removeDuplicateTasks = (tasks: TaskNode[]): TaskNode[] => {
+    const seen = new Set<string>();
+    return tasks.filter(task => {
+      if (seen.has(task.id)) {
+        console.warn(`중복 태스크 제거: ${task.id}`);
+        return false;
+      }
+      seen.add(task.id);
+      return true;
+    });
+  };
+
   // 서버에서 데이터 로드 (온라인 모드)
   const loadFromServer = useCallback(async (): Promise<boolean> => {
     try {
-      const [serverTasks, serverEdges] = await Promise.all([
-        api.fetchTasks(),
-        api.fetchEdges(),
-      ]);
+      // GET /api/graph를 사용하여 PCA 좌표 포함된 데이터 로드
+      const { tasks: serverTasks, edges: serverEdges } = await api.fetchGraphData();
 
-      setTasks(serverTasks);
+      // 중복 제거
+      const uniqueTasks = removeDuplicateTasks(serverTasks);
+      
+      console.log('📊 그래프 데이터 로드:', {
+        tasksCount: uniqueTasks.length,
+        tasksWithPosition: uniqueTasks.filter(t => t.x !== undefined).length,
+      });
+      
+      setTasks(uniqueTasks);
       setEdges(serverEdges);
       
       // 로컬 캐시 업데이트
-      await syncCacheFromServer(serverTasks, serverEdges);
+      await syncCacheFromServer(uniqueTasks, serverEdges);
       
       setIsDemoMode(false);
       return true;
@@ -174,7 +193,9 @@ export function useTaskStore() {
         setEdges(sampleEdges);
         setIsDemoMode(true);
       } else {
-        setTasks(localTasks);
+        // 중복 제거
+        const uniqueTasks = removeDuplicateTasks(localTasks);
+        setTasks(uniqueTasks);
         setEdges(localEdges);
         setIsDemoMode(false);
       }
@@ -234,9 +255,11 @@ export function useTaskStore() {
     }
 
     if (isOnline) {
-      // 온라인: API로 생성
+      // 온라인: API로 생성 (백엔드에서 임베딩 + PCA + 태그 기반 엣지 자동 생성)
       try {
-        const created = await api.createTask({
+        console.log('📝 태스크 생성 요청:', { title: task.title, tags: task.tags });
+
+        await api.createTask({
           id: task.id,
           title: task.title,
           description: task.description,
@@ -245,9 +268,13 @@ export function useTaskStore() {
           category: task.category,
           tags: task.tags,
         });
-        setTasks((prev: TaskNode[]) => [...prev, created]);
-        // 로컬 캐시에도 저장
-        await db.tasks.put(created);
+
+        console.log('✅ 태스크 생성 완료, 전체 데이터 새로고침 중...');
+
+        // 서버에서 전체 데이터 새로고침 (PCA 좌표 + 자동 생성된 엣지 포함)
+        await loadFromServer();
+
+        console.log('✅ 데이터 새로고침 완료');
       } catch (error) {
         console.error('태스크 생성 실패:', error);
         throw error;
@@ -521,13 +548,18 @@ export function useTaskStore() {
       if (isOnline) {
         // 온라인: 서버에 데이터 추가
         if (mode === 'replace' && !isDemoMode) {
-          // 기존 데이터 삭제 (서버) - 데모 모드가 아닐 때만
-          for (const task of tasks) {
-            try {
-              await api.deleteTaskApi(task.id);
-            } catch {
-              // 삭제 실패는 무시
+          // 서버에서 실제 태스크 목록 조회 후 삭제
+          try {
+            const serverTasks = await api.fetchTasks();
+            for (const task of serverTasks) {
+              try {
+                await api.deleteTaskCascade(task.id);
+              } catch {
+                // 삭제 실패는 무시
+              }
             }
+          } catch (error) {
+            console.error('서버 태스크 목록 조회 실패:', error);
           }
         }
 
@@ -679,6 +711,70 @@ export function useTaskStore() {
 
   const graphData = useMemo(() => ({ nodes: tasks, edges } as GraphData), [tasks, edges]);
 
+  // ================================================================
+  // 자동정렬 (PCA 기반 위치 재배치)
+  // ================================================================
+
+  /**
+   * 자동정렬 - PCA 기반 좌표 재배치
+   * 백엔드에서 전체 태스크의 임베딩을 PCA로 분석하여 좌표 반환
+   * (엣지는 이미 태스크 생성 시 자동으로 연결됨)
+   * @param onProgress 진행률 콜백
+   */
+  const autoArrange = useCallback(async (
+    onProgress?: (current: number, total: number, message: string) => void
+  ): Promise<{ updated: number, failed: number }> => {
+    const result = { updated: 0, failed: 0 };
+
+    if (!isOnline) {
+      throw new Error('자동정렬은 온라인 상태에서만 가능합니다');
+    }
+
+    try {
+      onProgress?.(0, 100, 'PCA 좌표 계산 요청 중...');
+      console.log('🔄 자동정렬 시작: PCA 좌표 계산 요청');
+
+      // 백엔드에서 PCA 좌표 계산
+      const positions = await api.autoArrange();
+      
+      console.log(`📍 PCA 좌표 수신: ${positions.length}개`);
+      onProgress?.(50, 100, '좌표 적용 중...');
+
+      // 위치 맵 생성
+      const positionMap = new Map(positions.map(p => [p.id, { x: p.x, y: p.y }]));
+
+      // 로컬 상태 업데이트
+      setTasks((prev: TaskNode[]) => 
+        prev.map((task: TaskNode) => {
+          const pos = positionMap.get(task.id);
+          if (pos) {
+            result.updated++;
+            return { ...task, x: pos.x, y: pos.y };
+          }
+          result.failed++;
+          return task;
+        })
+      );
+
+      // 로컬 캐시도 업데이트
+      for (const pos of positions) {
+        try {
+          await db.tasks.update(pos.id, { x: pos.x, y: pos.y });
+        } catch (error) {
+          console.warn(`로컬 캐시 업데이트 실패: ${pos.id}`, error);
+        }
+      }
+
+      onProgress?.(100, 100, '완료');
+      console.log(`✅ 자동정렬 완료: ${result.updated}개 업데이트, ${result.failed}개 실패`);
+
+      return result;
+    } catch (error) {
+      console.error('자동정렬 실패:', error);
+      throw error;
+    }
+  }, [isOnline]);
+
   return {
     // 데이터
     tasks,
@@ -710,5 +806,8 @@ export function useTaskStore() {
     // 동기화
     forceSync,
     refresh,
+
+    // 자동정렬
+    autoArrange,
   };
 }
