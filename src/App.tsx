@@ -111,7 +111,7 @@ function App() {
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-    };
+  };
   }, [showTagFilter]);
 
   // 로딩 중
@@ -190,7 +190,7 @@ function App() {
                 marginLeft: '4px',
               }}>{selectedTags.length}</span>}
             </button>
-            
+          
             {/* 태그 필터 드롭다운 */}
             {showTagFilter && (
               <div 
@@ -223,7 +223,7 @@ function App() {
                     태그 필터
                   </span>
                   {selectedTags.length > 0 && (
-                    <button
+            <button 
                       onClick={clearTagFilter}
                       style={{
                         background: 'transparent',
@@ -234,7 +234,7 @@ function App() {
                       }}
                     >
                       모두 해제
-                    </button>
+            </button>
                   )}
                 </div>
                 
@@ -245,7 +245,7 @@ function App() {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {allTags.map(tag => (
-                      <button
+            <button 
                         key={tag}
                         onClick={() => toggleTag(tag)}
                         style={{
@@ -291,7 +291,7 @@ function App() {
                         }}>
                           {tasks.filter(t => (t.tags || []).includes(tag)).length}
                         </span>
-                      </button>
+            </button>
                     ))}
                   </div>
                 )}
@@ -1014,7 +1014,7 @@ function AddTaskModal({
               >
                 📤 JSON 파일로 내보내기
               </button>
-            </div>
+      </div>
 
             {/* 가져오기 섹션 */}
             <div style={{
@@ -1028,8 +1028,8 @@ function AddTaskModal({
               </h3>
               <p style={{ color: '#94a3b8', fontSize: '13px', marginBottom: '16px' }}>
                 JSON 파일에서 태스크를 불러옵니다.
-              </p>
-
+        </p>
+        
               {/* 파일 선택 */}
               <div style={{ marginBottom: '16px' }}>
                 <input
@@ -1039,10 +1039,10 @@ function AddTaskModal({
                   onChange={handleFileSelect}
                   style={{ display: 'none' }}
                 />
-                <button
+          <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  style={{
+            style={{
                     padding: '12px 24px',
                     background: 'rgba(34, 197, 94, 0.2)',
                     border: '1px solid rgba(34, 197, 94, 0.4)',
@@ -1069,38 +1069,38 @@ function AddTaskModal({
                     onClick={() => handleImportAction('replace')}
                     style={{
                       padding: '12px 20px',
-                      background: 'rgba(239, 68, 68, 0.15)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
                       borderRadius: '8px',
                       color: '#f87171',
-                      cursor: 'pointer',
+              cursor: 'pointer',
                       fontSize: '13px',
-                    }}
-                  >
-                    🔄 덮어쓰기
+            }}
+          >
+              🔄 덮어쓰기
                     <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
                       기존 데이터 삭제 후 교체
                     </span>
-                  </button>
-                  <button
+          </button>
+          <button
                     type="button"
                     onClick={() => handleImportAction('merge')}
-                    style={{
+            style={{
                       padding: '12px 20px',
-                      background: 'rgba(34, 197, 94, 0.15)',
-                      border: '1px solid rgba(34, 197, 94, 0.3)',
+              background: 'rgba(34, 197, 94, 0.15)',
+              border: '1px solid rgba(34, 197, 94, 0.3)',
                       borderRadius: '8px',
                       color: '#4ade80',
-                      cursor: 'pointer',
+              cursor: 'pointer',
                       fontSize: '13px',
-                    }}
-                  >
-                    ➕ 병합하기
+            }}
+          >
+              ➕ 병합하기
                     <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
                       기존 데이터 유지 + 추가
                     </span>
                   </button>
-                </div>
+            </div>
               )}
 
               {/* 메시지 표시 */}
@@ -1119,11 +1119,11 @@ function AddTaskModal({
                   fontSize: '13px',
                 }}>
                   {importMessage.type === 'success' ? '✅' : '❌'} {importMessage.text}
-                </div>
-              )}
             </div>
+              )}
+        </div>
 
-            <div className="modal-actions" style={{ marginTop: '20px' }}>
+        <div className="modal-actions" style={{ marginTop: '20px' }}>
               <button type="button" className="btn-cancel" onClick={onClose}>
                 닫기
               </button>

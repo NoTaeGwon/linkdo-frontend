@@ -13,7 +13,6 @@
 
 import { useState, useEffect } from 'react';
 import type { TaskNode, Priority, TaskStatus } from '../types';
-import { PRIORITY_RADIUS } from '../types';
 import { CATEGORY_COLORS } from '../data/sampleData';
 
 interface TaskPanelProps {
@@ -380,36 +379,6 @@ export function TaskPanel({
             )}
           </div>
 
-          {/* 노드 크기 */}
-          {!isEditing && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#64748b', fontSize: '13px' }}>노드 크기</span>
-              <span style={{ color: '#cbd5e1', fontSize: '13px', fontWeight: '500' }}>
-                r = {PRIORITY_RADIUS[selectedNode.priority]}px
-              </span>
-            </div>
-          )}
-
-          {/* ID */}
-          {!isEditing && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#64748b', fontSize: '13px' }}>ID</span>
-              <code
-                style={{
-                  color: '#94a3b8',
-                  fontSize: '12px',
-                  background: 'rgba(148, 163, 184, 0.1)',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontFamily: 'monospace',
-                }}
-              >
-                {selectedNode.id.length > 15 
-                  ? selectedNode.id.slice(0, 15) + '...' 
-                  : selectedNode.id}
-              </code>
-            </div>
-          )}
         </div>
 
         {/* 태그 섹션 */}
@@ -693,7 +662,15 @@ export function TaskPanel({
                 연결된 태스크가 없습니다
               </p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '6px',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                paddingRight: '4px',
+              }}>
                 {connectedNodeIds.map(nodeId => {
                   const connectedTask = allTasks.find(t => t.id === nodeId);
                   if (!connectedTask) return null;

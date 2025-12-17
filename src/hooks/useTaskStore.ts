@@ -281,7 +281,7 @@ export function useTaskStore() {
       }
     } else {
       // 오프라인: 로컬에 저장 + 대기 큐에 추가
-      await db.tasks.add(task);
+    await db.tasks.add(task);
       await addPendingOperation({
         type: 'create',
         entity: 'task',
@@ -324,7 +324,7 @@ export function useTaskStore() {
       }
     } else {
       // 오프라인: 로컬에서 삭제 + 대기 큐에 추가
-      await db.tasks.delete(id);
+    await db.tasks.delete(id);
       await db.edges.filter((edge: StoredEdge) => edge.source === id || edge.target === id).delete();
       await addPendingOperation({
         type: 'delete',
@@ -374,7 +374,7 @@ export function useTaskStore() {
 
       setTasks((prev: TaskNode[]) => prev.map((task: TaskNode) => 
         task.id === id ? { ...task, ...cleanUpdates } : task
-      ));
+    ));
       await updatePendingCount();
     }
   };
@@ -412,7 +412,7 @@ export function useTaskStore() {
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const newEdge: StoredEdge = { source: sourceId, target: targetId, weight };
       
-      await db.edges.add(newEdge);
+    await db.edges.add(newEdge);
       await addPendingOperation({
         type: 'create',
         entity: 'edge',
@@ -463,13 +463,13 @@ export function useTaskStore() {
       }
     } else {
       // 오프라인: 로컬에서 삭제 + 대기 큐에 추가
-      await db.edges
+    await db.edges
         .filter((edge: StoredEdge) => {
-          const src = typeof edge.source === 'string' ? edge.source : (edge.source as TaskNode).id;
-          const tgt = typeof edge.target === 'string' ? edge.target : (edge.target as TaskNode).id;
-          return (src === sourceId && tgt === targetId) || (src === targetId && tgt === sourceId);
-        })
-        .delete();
+        const src = typeof edge.source === 'string' ? edge.source : (edge.source as TaskNode).id;
+        const tgt = typeof edge.target === 'string' ? edge.target : (edge.target as TaskNode).id;
+        return (src === sourceId && tgt === targetId) || (src === targetId && tgt === sourceId);
+      })
+      .delete();
 
       const src = typeof edgeToDelete.source === 'string' ? edgeToDelete.source : edgeToDelete.source.id;
       const tgt = typeof edgeToDelete.target === 'string' ? edgeToDelete.target : edgeToDelete.target.id;
@@ -482,9 +482,9 @@ export function useTaskStore() {
 
       setEdges((prev: StoredEdge[]) => prev.filter((edge: StoredEdge) => {
         const tgt = typeof edge.target === 'string' ? edge.target : edge.target.id;
-        const src = typeof edge.source === 'string' ? edge.source : edge.source.id;
-        return !((src === sourceId && tgt === targetId) || (src === targetId && tgt === sourceId));
-      }));
+      const src = typeof edge.source === 'string' ? edge.source : edge.source.id;
+      return !((src === sourceId && tgt === targetId) || (src === targetId && tgt === sourceId));
+    }));
       await updatePendingCount();
     }
   };
@@ -607,7 +607,7 @@ export function useTaskStore() {
         return { success: true, message: `${createdTasks.length}개의 태스크를 ${modeText}!` };
       } else {
         // 오프라인: 기존 로컬 로직 사용
-        if (mode === 'replace') {
+      if (mode === 'replace') {
           // 대기 큐 초기화 (이전 작업들이 온라인 복구 시 실행되지 않도록)
           await db.pendingOperations.clear();
           
@@ -621,44 +621,44 @@ export function useTaskStore() {
           }
           
           // IndexedDB 초기화
-          await db.tasks.clear();
-          await db.edges.clear();
-        }
+        await db.tasks.clear();
+        await db.edges.clear();
+      }
 
         const existingIds = mode === 'merge' ? new Set(tasks.map((t: TaskNode) => t.id)) : new Set();
-        
-        const tasksToAdd: TaskNode[] = data.tasks.map((t: Partial<TaskNode>) => {
-          let id = t.id || `task-${Date.now()}-${Math.random()}`;
-          if (mode === 'merge' && existingIds.has(id)) {
-            id = `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-          }
-          return {
-            id,
-            title: t.title || '제목 없음',
-            description: t.description,
-            priority: t.priority || 'medium',
-            status: t.status || 'todo',
-            category: t.category || 'general',
+      
+      const tasksToAdd: TaskNode[] = data.tasks.map((t: Partial<TaskNode>) => {
+        let id = t.id || `task-${Date.now()}-${Math.random()}`;
+        if (mode === 'merge' && existingIds.has(id)) {
+          id = `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+        return {
+          id,
+          title: t.title || '제목 없음',
+          description: t.description,
+          priority: t.priority || 'medium',
+          status: t.status || 'todo',
+          category: t.category || 'general',
             tags: t.tags || [],
-          };
-        });
+        };
+      });
 
-        const idMapping = new Map<string, string>();
-        data.tasks.forEach((t: Partial<TaskNode>, i: number) => {
-          idMapping.set(t.id || '', tasksToAdd[i].id);
-        });
+      const idMapping = new Map<string, string>();
+      data.tasks.forEach((t: Partial<TaskNode>, i: number) => {
+        idMapping.set(t.id || '', tasksToAdd[i].id);
+      });
 
-        await db.tasks.bulkAdd(tasksToAdd);
+      await db.tasks.bulkAdd(tasksToAdd);
 
         let edgesToAdd: StoredEdge[] = [];
-        if (data.edges && Array.isArray(data.edges)) {
-          edgesToAdd = data.edges.map((e: Partial<TaskEdge>) => ({
-            source: idMapping.get(String(e.source)) || String(e.source),
-            target: idMapping.get(String(e.target)) || String(e.target),
-            weight: e.weight ?? 0.5,
-          }));
-          await db.edges.bulkAdd(edgesToAdd);
-        }
+      if (data.edges && Array.isArray(data.edges)) {
+        edgesToAdd = data.edges.map((e: Partial<TaskEdge>) => ({
+          source: idMapping.get(String(e.source)) || String(e.source),
+          target: idMapping.get(String(e.target)) || String(e.target),
+          weight: e.weight ?? 0.5,
+        }));
+        await db.edges.bulkAdd(edgesToAdd);
+      }
 
         // 대기 큐에 추가
         for (const task of tasksToAdd) {
@@ -670,18 +670,18 @@ export function useTaskStore() {
           });
         }
 
-        if (mode === 'replace') {
-          setTasks(tasksToAdd);
-          setEdges(edgesToAdd);
-        } else {
+      if (mode === 'replace') {
+        setTasks(tasksToAdd);
+        setEdges(edgesToAdd);
+      } else {
         setTasks((prev: TaskNode[]) => [...prev, ...tasksToAdd]);
         setEdges((prev: StoredEdge[]) => [...prev, ...edgesToAdd]);
-        }
-        
-        setIsDemoMode(false);
+      }
+      
+      setIsDemoMode(false);
         await updatePendingCount();
 
-        const modeText = mode === 'replace' ? '가져왔습니다' : '추가했습니다';
+      const modeText = mode === 'replace' ? '가져왔습니다' : '추가했습니다';
         return { success: true, message: `${tasksToAdd.length}개의 태스크를 ${modeText}! (오프라인 모드 - 온라인 시 동기화됨)` };
       }
     } catch (error) {
@@ -740,8 +740,25 @@ export function useTaskStore() {
       console.log(`📍 PCA 좌표 수신: ${positions.length}개`);
       onProgress?.(50, 100, '좌표 적용 중...');
 
-      // 위치 맵 생성
-      const positionMap = new Map(positions.map(p => [p.id, { x: p.x, y: p.y }]));
+      // 좌표 변환 설정
+      const CANVAS_CENTER_X = 600;
+      const CANVAS_CENTER_Y = 400;
+      const SCALE = 4;
+
+      // 받은 좌표들의 실제 중심점 계산
+      const validPositions = positions.filter(p => p.x !== 0 || p.y !== 0);
+      let centerX = 0, centerY = 0;
+      if (validPositions.length > 0) {
+        centerX = validPositions.reduce((sum, p) => sum + p.x, 0) / validPositions.length;
+        centerY = validPositions.reduce((sum, p) => sum + p.y, 0) / validPositions.length;
+      }
+      console.log(`📐 PCA 중심점: (${centerX.toFixed(2)}, ${centerY.toFixed(2)})`);
+
+      // 위치 맵 생성 (중심점 기준으로 변환 → 항상 캔버스 중앙에 배치)
+      const positionMap = new Map(positions.map(p => [p.id, { 
+        x: CANVAS_CENTER_X + (p.x - centerX) * SCALE, 
+        y: CANVAS_CENTER_Y + (p.y - centerY) * SCALE 
+      }]));
 
       // 로컬 상태 업데이트
       setTasks((prev: TaskNode[]) => 
@@ -756,10 +773,13 @@ export function useTaskStore() {
         })
       );
 
-      // 로컬 캐시도 업데이트
+      // 로컬 캐시도 업데이트 (변환된 좌표 저장)
       for (const pos of positions) {
         try {
-          await db.tasks.update(pos.id, { x: pos.x, y: pos.y });
+          const transformedPos = positionMap.get(pos.id);
+          if (transformedPos) {
+            await db.tasks.update(pos.id, { x: transformedPos.x, y: transformedPos.y });
+          }
         } catch (error) {
           console.warn(`로컬 캐시 업데이트 실패: ${pos.id}`, error);
         }

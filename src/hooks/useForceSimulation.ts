@@ -49,11 +49,16 @@ export function useForceSimulation({
   useEffect(() => {
     if (nodes.length === 0 || width === 0 || height === 0) return;
 
-    // 노드 복사 및 기존 위치 계승 (d3가 객체를 변경하기 때문)
+    // 노드 복사 및 위치 결정
+    // 새 좌표(n.x, n.y)가 있으면 그것을 사용, 없으면 기존 시뮬레이션 좌표 사용
     const nodesCopy: TaskNode[] = nodes.map((n) => {
-      // 기존에 시뮬레이션 중이던 노드가 있다면 위치와 속도 정보를 가져옴
       const existingNode = nodesRef.current.find((prev) => prev.id === n.id);
-      if (existingNode) {
+      
+      // 새 좌표가 명시적으로 설정되어 있으면 (자동정렬 등) 그것을 우선 사용
+      const hasNewPosition = n.x !== undefined && n.y !== undefined && n.x !== 0 && n.y !== 0;
+      
+      if (existingNode && !hasNewPosition) {
+        // 새 좌표가 없으면 기존 시뮬레이션 좌표 유지
         return {
           ...n,
           x: existingNode.x,
@@ -64,7 +69,15 @@ export function useForceSimulation({
           fy: existingNode.fy,
         };
       }
-      return { ...n };
+      
+      // 새 좌표가 있으면 그것을 사용 (속도는 0으로 리셋)
+      return { 
+        ...n,
+        vx: 0,
+        vy: 0,
+        fx: null,
+        fy: null,
+      };
     });
     
     // 존재하는 노드만 참조하는 엣지만 사용 (동기화 중 불일치 방지)
@@ -93,12 +106,12 @@ export function useForceSimulation({
           .distance((d) => getDistanceByWeight(d.weight)) // 목표 거리
           .strength((d) => d.weight * 0.5) // 당기는 힘
       )
-      .force('charge', forceManyBody<TaskNode>().strength(-400)) // 모든 노드가 서로 밀어냄
-      .force('center', forceCenter(width / 2, height / 2))  // 중앙으로 당김김
+      .force('charge', forceManyBody<TaskNode>().strength(-150)) // 모든 노드가 서로 밀어냄 (약하게 조정)
+      .force('center', forceCenter(width / 2, height / 2))  // 중앙으로 당김
       .force(
         'collision',
-        forceCollide<TaskNode>().radius((d) => PRIORITY_RADIUS[d.priority] + 15)  
-      ) // 노드 충돌 방지
+        forceCollide<TaskNode>().radius((d) => PRIORITY_RADIUS[d.priority] + 5)  
+      ) // 노드 충돌 방지 (최소 간격만 유지)
       .alphaDecay(0.02)     // 시뮬레이션 감속
       .velocityDecay(0.3);  // 노드 움직임에 마찰력 추가
 
@@ -112,8 +125,10 @@ export function useForceSimulation({
       });
     });
 
-    // 시뮬레이션 시작
-    simulation.alpha(1).restart();
+    // 시뮬레이션 시작 (노드에 좌표가 있으면 약하게, 없으면 강하게)
+    const hasPositionedNodes = nodesCopy.some(n => n.x !== undefined && n.y !== undefined);
+    const initialAlpha = hasPositionedNodes ? 0.3 : 1; // 좌표가 있으면 약하게 시작
+    simulation.alpha(initialAlpha).restart();
 
     return () => {
       simulation.stop();
