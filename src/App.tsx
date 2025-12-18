@@ -14,6 +14,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { Graph, type ViewState } from './components/Graph';
 import { TaskPanel } from './components/TaskPanel';
 import { SearchBar } from './components/SearchBar';
+import { DatePicker } from './components/DatePicker';
 import { useTaskStore } from './hooks/useTaskStore';
 import type { TaskNode, Priority } from './types';
 import { TOAST_DURATION, TASK_SELECT_DELAY } from './constants';
@@ -132,6 +133,7 @@ function App() {
     priority: Priority; 
     description?: string;
     tags?: string[];
+    dueDate?: string;
   }) => {
     const newTask: TaskNode = {
       id: `task-${Date.now()}`,
@@ -141,6 +143,7 @@ function App() {
       status: 'todo',
       category: 'general',
       tags: taskData.tags || [],
+      dueDate: taskData.dueDate,
     };
     await addTask(newTask);
     setShowAddModal(false);
@@ -531,7 +534,7 @@ function AddTaskModal({
   onImport,
 }: { 
   onClose: () => void; 
-  onAdd: (data: { title: string; priority: Priority; description?: string; tags?: string[] }) => void;
+  onAdd: (data: { title: string; priority: Priority; description?: string; tags?: string[]; dueDate?: string }) => void;
   isApiAvailable?: boolean;
   onExport: () => void;
   onImport: (file: File, mode: 'replace' | 'merge') => Promise<{ success: boolean; message: string }>;
@@ -542,6 +545,7 @@ function AddTaskModal({
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [dueDate, setDueDate] = useState('');
   
   // 태그 추천 관련 상태
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
@@ -561,6 +565,7 @@ function AddTaskModal({
         priority,
         description: description.trim() || undefined,
         tags,
+        dueDate: dueDate || undefined,
       });
     }
   };
@@ -964,6 +969,15 @@ function AddTaskModal({
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}
+            />
+          </div>
+
+          <div className="form-group">
+            <label>마감일 (선택)</label>
+            <DatePicker
+              value={dueDate}
+              onChange={setDueDate}
+              placeholder="마감일을 선택하세요"
             />
           </div>
 

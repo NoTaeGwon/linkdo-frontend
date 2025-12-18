@@ -14,6 +14,56 @@
 import { useState, useEffect } from 'react';
 import type { TaskNode, Priority, TaskStatus } from '../types';
 import { CATEGORY_COLORS } from '../data/sampleData';
+import { DatePicker } from './DatePicker';
+
+/**
+ * 마감일 표시 배지 컴포넌트
+ */
+function DueDateBadge({ dueDate }: { dueDate?: string }) {
+  if (!dueDate) {
+    return (
+      <span style={{ color: '#64748b', fontSize: '12px' }}>
+        설정 안됨
+      </span>
+    );
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+
+  const diffTime = due.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  let config = { bg: '#64748b20', color: '#94a3b8', label: `D-${diffDays}` };
+
+  if (diffDays < 0) {
+    config = { bg: '#ef444420', color: '#ef4444', label: `기한 ${Math.abs(diffDays)}일 지남` };
+  } else if (diffDays === 0) {
+    config = { bg: '#f59e0b20', color: '#f59e0b', label: '오늘 마감' };
+  } else if (diffDays <= 3) {
+    config = { bg: '#f9731620', color: '#f97316', label: `D-${diffDays}` };
+  } else {
+    config = { bg: '#6366f120', color: '#818cf8', label: dueDate };
+  }
+
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        background: config.bg,
+        color: config.color,
+        padding: '6px 12px',
+        borderRadius: '20px',
+        fontSize: '12px',
+        fontWeight: '600',
+      }}
+    >
+      {config.label}
+    </span>
+  );
+}
 
 interface TaskPanelProps {
   selectedNode: TaskNode | null;
@@ -46,6 +96,7 @@ export function TaskPanel({
   const [editPriority, setEditPriority] = useState<Priority>('medium');
   const [editStatus, setEditStatus] = useState<TaskStatus>('todo');
   const [editTags, setEditTags] = useState<string[]>([]);
+  const [editDueDate, setEditDueDate] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
@@ -71,6 +122,7 @@ export function TaskPanel({
     setEditPriority(selectedNode.priority);
     setEditStatus(selectedNode.status);
     setEditTags(selectedNode.tags || []);
+    setEditDueDate(selectedNode.dueDate || '');
     setTagInput('');
     setSuggestedTags([]);
     setSuggestionError(null);
@@ -144,6 +196,7 @@ export function TaskPanel({
         priority: editPriority,
         status: editStatus,
         tags: editTags,
+        dueDate: editDueDate || undefined,
       });
       setIsEditing(false);
     }
@@ -611,6 +664,30 @@ export function TaskPanel({
                 </span>
               )}
             </div>
+          )}
+        </div>
+
+        {/* 마감일 섹션 */}
+        <div style={{ marginTop: '16px' }}>
+          <span style={{
+            color: '#94a3b8',
+            fontSize: '12px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            display: 'block',
+            marginBottom: '8px',
+          }}>
+            📅 마감일
+          </span>
+          {isEditing ? (
+            <DatePicker
+              value={editDueDate}
+              onChange={setEditDueDate}
+              placeholder="마감일을 선택하세요"
+            />
+          ) : (
+            <DueDateBadge dueDate={selectedNode.dueDate} />
           )}
         </div>
 

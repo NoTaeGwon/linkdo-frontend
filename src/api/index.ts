@@ -25,6 +25,7 @@ interface ApiTask {
   status: TaskStatus;
   category?: string;
   tags: string[];
+  due_date?: string;  // 마감일 (YYYY-MM-DD 형식)
   x?: number;  // PCA 계산된 X 좌표
   y?: number;  // PCA 계산된 Y 좌표
 }
@@ -100,6 +101,7 @@ function toTaskNode(apiTask: ApiTask): TaskNode {
     status: apiTask.status,
     category: apiTask.category,
     tags: apiTask.tags || [],
+    dueDate: apiTask.due_date,  // 마감일
     x: apiTask.x,  // PCA 좌표
     y: apiTask.y,  // PCA 좌표
   };
@@ -158,6 +160,7 @@ export async function createTask(task: Omit<TaskNode, 'x' | 'y' | 'fx' | 'fy' | 
       status: task.status,
       category: task.category,
       tags: task.tags,
+      due_date: task.dueDate,  // 마감일
     }),
   });
   return toTaskNode(created);
@@ -176,12 +179,17 @@ export async function fetchTask(id: string): Promise<TaskNode> {
  * 태스크 수정
  */
 export async function updateTaskApi(id: string, updates: Partial<TaskNode>): Promise<TaskNode> {
-  // d3-force 관련 속성 제거
-  const { x, y, fx, fy, vx, vy, index, ...cleanUpdates } = updates;
+  // d3-force 관련 속성 제거, dueDate를 due_date로 변환
+  const { x, y, fx, fy, vx, vy, index, dueDate, ...cleanUpdates } = updates;
+  
+  const apiUpdates = {
+    ...cleanUpdates,
+    ...(dueDate !== undefined && { due_date: dueDate }),
+  };
   
   const updated = await apiRequest<ApiTask>(`/tasks/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(cleanUpdates),
+    body: JSON.stringify(apiUpdates),
   });
   return toTaskNode(updated);
 }

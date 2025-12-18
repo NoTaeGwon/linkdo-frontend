@@ -32,6 +32,7 @@ export interface TaskNode {
   status: TaskStatus;
   category?: string;
   tags: string[];
+  dueDate?: string; // 마감일 (YYYY-MM-DD 형식)
   // d3-force 시뮬레이션 좌표
   x?: number;
   y?: number;
