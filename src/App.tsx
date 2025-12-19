@@ -53,6 +53,37 @@ function App() {
   const [isAutoArranging, setIsAutoArranging] = useState(false);
   const [autoArrangeProgress, setAutoArrangeProgress] = useState({ current: 0, total: 0, taskTitle: '' });
 
+  // 초기 로드 시 노드 중심으로 화면 이동
+  const initialCenterDone = useRef(false);
+  useEffect(() => {
+    // 로딩 중이거나, 이미 중심 이동을 했거나, 태스크가 없으면 스킵
+    if (isLoading || initialCenterDone.current || tasks.length === 0) return;
+
+    // 좌표가 있는 노드만 필터링
+    const positionedNodes = tasks.filter(t => t.x !== undefined && t.y !== undefined);
+    if (positionedNodes.length === 0) return;
+
+    // 노드들의 중심점 계산
+    const centerX = positionedNodes.reduce((sum, n) => sum + (n.x || 0), 0) / positionedNodes.length;
+    const centerY = positionedNodes.reduce((sum, n) => sum + (n.y || 0), 0) / positionedNodes.length;
+
+    // 화면 중앙 좌표
+    const screenCenterX = window.innerWidth / 2;
+    const screenCenterY = window.innerHeight / 2;
+
+    // 노드 중심이 화면 중앙에 오도록 pan 조정
+    setViewState(prev => ({
+      ...prev,
+      pan: {
+        x: screenCenterX - centerX,
+        y: screenCenterY - centerY,
+      }
+    }));
+
+    initialCenterDone.current = true;
+    console.log(`📍 초기 화면 중심 이동: 노드 중심 (${centerX.toFixed(0)}, ${centerY.toFixed(0)}) → 화면 중앙`);
+  }, [isLoading, tasks]);
+
   // 전체 태그 목록 추출
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -499,6 +530,20 @@ function App() {
                   setAutoArrangeProgress({ current, total, taskTitle: message });
                 }
               );
+              
+              // 자동정렬 후 노드 중심으로 화면 이동
+              if (result.center) {
+                const screenCenterX = window.innerWidth / 2;
+                const screenCenterY = window.innerHeight / 2;
+                setViewState(prev => ({
+                  ...prev,
+                  pan: {
+                    x: screenCenterX - result.center!.x,
+                    y: screenCenterY - result.center!.y,
+                  }
+                }));
+              }
+              
               const message = `✅ 자동정렬 완료: ${result.updated}개 태스크 위치 업데이트`;
               setToastMessage(message);
               setTimeout(() => setToastMessage(null), TOAST_DURATION);

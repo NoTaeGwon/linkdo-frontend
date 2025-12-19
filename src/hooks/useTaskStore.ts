@@ -723,8 +723,8 @@ export function useTaskStore() {
    */
   const autoArrange = useCallback(async (
     onProgress?: (current: number, total: number, message: string) => void
-  ): Promise<{ updated: number, failed: number }> => {
-    const result = { updated: 0, failed: 0 };
+  ): Promise<{ updated: number, failed: number, center?: { x: number, y: number } }> => {
+    const result: { updated: number, failed: number, center?: { x: number, y: number } } = { updated: 0, failed: 0 };
 
     if (!isOnline) {
       throw new Error('자동정렬은 온라인 상태에서만 가능합니다');
@@ -740,27 +740,20 @@ export function useTaskStore() {
       console.log(`📍 PCA 좌표 수신: ${positions.length}개`);
       onProgress?.(50, 100, '좌표 적용 중...');
 
-      // 좌표 변환 설정
-      const CANVAS_CENTER_X = 600;
-      const CANVAS_CENTER_Y = 400;
-      const SCALE = 4;
+      // PCA 좌표를 그대로 사용 (변환 없음)
+      const positionMap = new Map(positions.map(p => [p.id, { x: p.x, y: p.y }]));
 
-      // 받은 좌표들의 실제 중심점 계산
+      // 노드 중심점 계산 (화면 이동용)
       const validPositions = positions.filter(p => p.x !== 0 || p.y !== 0);
-      let centerX = 0, centerY = 0;
       if (validPositions.length > 0) {
-        centerX = validPositions.reduce((sum, p) => sum + p.x, 0) / validPositions.length;
-        centerY = validPositions.reduce((sum, p) => sum + p.y, 0) / validPositions.length;
+        result.center = {
+          x: validPositions.reduce((sum, p) => sum + p.x, 0) / validPositions.length,
+          y: validPositions.reduce((sum, p) => sum + p.y, 0) / validPositions.length,
+        };
+        console.log(`📐 노드 중심점: (${result.center.x.toFixed(2)}, ${result.center.y.toFixed(2)})`);
       }
-      console.log(`📐 PCA 중심점: (${centerX.toFixed(2)}, ${centerY.toFixed(2)})`);
 
-      // 위치 맵 생성 (중심점 기준으로 변환 → 항상 캔버스 중앙에 배치)
-      const positionMap = new Map(positions.map(p => [p.id, { 
-        x: CANVAS_CENTER_X + (p.x - centerX) * SCALE, 
-        y: CANVAS_CENTER_Y + (p.y - centerY) * SCALE 
-      }]));
-
-      // 로컬 상태 업데이트
+      // 로컬 상태 업데이트 (PCA 좌표 그대로 적용)
       setTasks((prev: TaskNode[]) => 
         prev.map((task: TaskNode) => {
           const pos = positionMap.get(task.id);
@@ -773,13 +766,10 @@ export function useTaskStore() {
         })
       );
 
-      // 로컬 캐시도 업데이트 (변환된 좌표 저장)
+      // 로컬 캐시도 업데이트
       for (const pos of positions) {
         try {
-          const transformedPos = positionMap.get(pos.id);
-          if (transformedPos) {
-            await db.tasks.update(pos.id, { x: transformedPos.x, y: transformedPos.y });
-          }
+          await db.tasks.update(pos.id, { x: pos.x, y: pos.y });
         } catch (error) {
           console.warn(`로컬 캐시 업데이트 실패: ${pos.id}`, error);
         }

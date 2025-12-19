@@ -97,6 +97,15 @@ export function useForceSimulation({
       simulationRef.current.stop();
     }
 
+    // 노드들의 실제 중심점 계산 (PCA 좌표가 있으면 그 중심, 없으면 화면 중앙)
+    const positionedNodes = nodesCopy.filter(n => n.x !== undefined && n.y !== undefined);
+    let centerX = width / 2;
+    let centerY = height / 2;
+    if (positionedNodes.length > 0) {
+      centerX = positionedNodes.reduce((sum, n) => sum + (n.x || 0), 0) / positionedNodes.length;
+      centerY = positionedNodes.reduce((sum, n) => sum + (n.y || 0), 0) / positionedNodes.length;
+    }
+
     // 새 시뮬레이션 생성
     const simulation = forceSimulation<TaskNode>(nodesCopy)
       .force(
@@ -107,7 +116,7 @@ export function useForceSimulation({
           .strength((d) => d.weight * 0.5) // 당기는 힘
       )
       .force('charge', forceManyBody<TaskNode>().strength(-150)) // 모든 노드가 서로 밀어냄 (약하게 조정)
-      .force('center', forceCenter(width / 2, height / 2))  // 중앙으로 당김
+      .force('center', forceCenter(centerX, centerY))  // 노드들의 실제 중심으로 당김 (위치 유지)
       .force(
         'collision',
         forceCollide<TaskNode>().radius((d) => PRIORITY_RADIUS[d.priority] + 5)  
