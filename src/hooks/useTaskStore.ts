@@ -165,6 +165,15 @@ export function useTaskStore() {
         tasksWithPosition: uniqueTasks.filter(t => t.x !== undefined).length,
       });
       
+      // 서버에 데이터가 없으면 데모 모드로 전환
+      if (uniqueTasks.length === 0) {
+        console.log('📭 서버에 데이터 없음 → 데모 모드 전환');
+        setTasks(sampleNodes);
+        setEdges(sampleEdges);
+        setIsDemoMode(true);
+        return true;
+      }
+      
       setTasks(uniqueTasks);
       setEdges(serverEdges);
       
