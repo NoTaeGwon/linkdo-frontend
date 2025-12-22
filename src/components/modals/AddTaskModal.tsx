@@ -154,6 +154,10 @@ export function AddTaskModal({
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      // 성공 시 잠시 후 모달 닫기
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     }
   };
 
