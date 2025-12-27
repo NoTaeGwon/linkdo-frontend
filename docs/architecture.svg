@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 520">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="reactGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#61dafb"/>
+      <stop offset="100%" style="stop-color:#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="d3Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b"/>
+      <stop offset="100%" style="stop-color:#f97316"/>
+    </linearGradient>
+    <linearGradient id="storeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <linearGradient id="dbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22c55e"/>
+      <stop offset="100%" style="stop-color:#10b981"/>
+    </linearGradient>
+    <linearGradient id="apiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+    <linearGradient id="backendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899"/>
+      <stop offset="100%" style="stop-color:#f43f5e"/>
+    </linearGradient>
+    
+    <!-- Shadow filter -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+    
+    <!-- Arrow markers -->
+    <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#22c55e"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowPink" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#ec4899"/>
+    </marker>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="950" height="520" fill="url(#bgGrad)"/>
+  
+  <!-- Title -->
+  <text x="450" y="40" text-anchor="middle" fill="#f8fafc" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="bold">Linkdo Frontend Architecture</text>
+  
+  <!-- ===== UI LAYER ===== -->
+  <text x="60" y="85" fill="#94a3b8" font-family="system-ui" font-size="12" font-weight="600">UI COMPONENTS</text>
+  
+  <!-- Graph Component -->
+  <rect x="50" y="100" width="160" height="90" rx="12" fill="url(#d3Grad)" filter="url(#shadow)"/>
+  <text x="130" y="135" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="14" font-weight="600">🕸️ Graph</text>
+  <text x="130" y="155" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="11">D3-Force</text>
+  <text x="130" y="175" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="11">Simulation</text>
+  
+  <!-- TaskPanel Component -->
+  <rect x="230" y="100" width="160" height="90" rx="12" fill="url(#reactGrad)" filter="url(#shadow)"/>
+  <text x="310" y="135" text-anchor="middle" fill="#1e293b" font-family="system-ui" font-size="14" font-weight="600">📋 TaskPanel</text>
+  <text x="310" y="155" text-anchor="middle" fill="rgba(30,41,59,0.8)" font-family="system-ui" font-size="11">Detail View</text>
+  <text x="310" y="175" text-anchor="middle" fill="rgba(30,41,59,0.8)" font-family="system-ui" font-size="11">Edit Mode</text>
+  
+  <!-- Modals -->
+  <rect x="410" y="100" width="160" height="90" rx="12" fill="url(#reactGrad)" filter="url(#shadow)"/>
+  <text x="490" y="135" text-anchor="middle" fill="#1e293b" font-family="system-ui" font-size="14" font-weight="600">➕ Modals</text>
+  <text x="490" y="155" text-anchor="middle" fill="rgba(30,41,59,0.8)" font-family="system-ui" font-size="11">AddTask</text>
+  <text x="490" y="175" text-anchor="middle" fill="rgba(30,41,59,0.8)" font-family="system-ui" font-size="11">AutoArrange</text>
+  
+  <!-- Search & Filter -->
+  <rect x="590" y="100" width="160" height="90" rx="12" fill="url(#reactGrad)" filter="url(#shadow)"/>
+  <text x="670" y="135" text-anchor="middle" fill="#1e293b" font-family="system-ui" font-size="14" font-weight="600">🔍 Search</text>
+  <text x="670" y="155" text-anchor="middle" fill="rgba(30,41,59,0.8)" font-family="system-ui" font-size="11">Tag Filter</text>
+  <text x="670" y="175" text-anchor="middle" fill="rgba(30,41,59,0.8)" font-family="system-ui" font-size="11">Text Search</text>
+  
+  <!-- ===== STATE LAYER ===== -->
+  <text x="60" y="310" fill="#94a3b8" font-family="system-ui" font-size="12" font-weight="600">STATE</text>
+  
+  <!-- useTaskStore -->
+  <rect x="140" y="265" width="280" height="80" rx="12" fill="url(#storeGrad)" filter="url(#shadow)"/>
+  <text x="280" y="300" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="16" font-weight="600">⚡ useTaskStore</text>
+  <text x="280" y="325" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="12">Tasks • Edges • Offline Queue • Sync</text>
+  
+  <!-- useForceSimulation -->
+  <rect x="450" y="265" width="200" height="80" rx="12" fill="url(#d3Grad)" filter="url(#shadow)"/>
+  <text x="550" y="300" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="14" font-weight="600">🔄 useForceSimulation</text>
+  <text x="550" y="325" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="11">Physics • Collision • Layout</text>
+  
+  <!-- ===== DATA LAYER ===== -->
+  <text x="60" y="395" fill="#94a3b8" font-family="system-ui" font-size="12" font-weight="600">DATA LAYER</text>
+  
+  <!-- IndexedDB -->
+  <rect x="80" y="410" width="180" height="80" rx="12" fill="url(#dbGrad)" filter="url(#shadow)"/>
+  <text x="170" y="445" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="14" font-weight="600">💾 IndexedDB</text>
+  <text x="170" y="470" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="11">Dexie.js • Offline Cache</text>
+  
+  <!-- API Client -->
+  <rect x="290" y="410" width="180" height="80" rx="12" fill="url(#apiGrad)" filter="url(#shadow)"/>
+  <text x="380" y="445" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="14" font-weight="600">🌐 API Client</text>
+  <text x="380" y="470" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="11">REST • Error Handling</text>
+  
+  <!-- Backend -->
+  <rect x="500" y="410" width="240" height="80" rx="12" fill="url(#backendGrad)" filter="url(#shadow)"/>
+  <text x="620" y="445" text-anchor="middle" fill="#fff" font-family="system-ui" font-size="14" font-weight="600">☁️ FastAPI Backend</text>
+  <text x="620" y="470" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-family="system-ui" font-size="11">AWS EKS • MongoDB • Gemini AI</text>
+  
+  <!-- ===== ARROWS ===== -->
+  <!-- UI to Store (moved right to avoid text overlap) -->
+  <path d="M130 190 L130 220 L180 220 L180 265" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#arrowPurple)"/>
+  <path d="M310 190 L310 220 L280 220 L280 265" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#arrowPurple)"/>
+  <path d="M490 190 L490 220 L350 220 L350 265" stroke="#8b5cf6" stroke-width="2" fill="none" marker-end="url(#arrowPurple)"/>
+  <path d="M550 190 L550 265" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#arrowOrange)"/>
+  
+  <!-- Store to Data Layer -->
+  <path d="M200 345 L170 410" stroke="#22c55e" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <path d="M350 345 L380 410" stroke="#3b82f6" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+  
+  <!-- API to Backend -->
+  <path d="M470 450 L500 450" stroke="#ec4899" stroke-width="2" fill="none" marker-end="url(#arrowPink)"/>
+  
+  <!-- Sync arrow between IndexedDB and API -->
+  <path d="M260 450 L290 450" stroke="#64748b" stroke-width="2" stroke-dasharray="5,5" fill="none"/>
+  <text x="275" y="440" text-anchor="middle" fill="#64748b" font-family="system-ui" font-size="10">Sync</text>
+  
+  <!-- Layer Labels on Right (moved further right) -->
+  <rect x="850" y="120" width="80" height="50" rx="8" fill="rgba(97,218,251,0.2)" stroke="#61dafb" stroke-width="1"/>
+  <text x="890" y="150" text-anchor="middle" fill="#61dafb" font-family="system-ui" font-size="11" font-weight="600">View</text>
+  
+  <rect x="850" y="280" width="80" height="50" rx="8" fill="rgba(139,92,246,0.2)" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="890" y="310" text-anchor="middle" fill="#8b5cf6" font-family="system-ui" font-size="11" font-weight="600">State</text>
+  
+  <rect x="850" y="425" width="80" height="50" rx="8" fill="rgba(34,197,94,0.2)" stroke="#22c55e" stroke-width="1"/>
+  <text x="890" y="455" text-anchor="middle" fill="#22c55e" font-family="system-ui" font-size="11" font-weight="600">Data</text>
+</svg>
