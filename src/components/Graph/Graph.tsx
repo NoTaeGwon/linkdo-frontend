@@ -295,13 +295,30 @@ export function Graph({
     setIsPanning(false);
   }, []);
 
-  // 뷰 리셋 (애니메이션)
+  // 뷰 리셋 (애니메이션) - 노드 중심으로 이동
   const handleResetView = useCallback(() => {
     setIsAnimating(true);
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
+    
+    // 노드 중심 계산
+    const positionedNodes = nodes.filter(n => n.x !== undefined && n.y !== undefined);
+    let newPan = { x: 0, y: 0 };
+    
+    if (positionedNodes.length > 0) {
+      const centerX = positionedNodes.reduce((sum, n) => sum + (n.x || 0), 0) / positionedNodes.length;
+      const centerY = positionedNodes.reduce((sum, n) => sum + (n.y || 0), 0) / positionedNodes.length;
+      const screenCenterX = dimensions.width / 2;
+      const screenCenterY = dimensions.height / 2;
+      newPan = {
+        x: screenCenterX - centerX,
+        y: screenCenterY - centerY,
+      };
+    }
+    
+    // 한 번에 업데이트
+    updateViewState({ zoom: 1, pan: newPan });
+    
     setTimeout(() => setIsAnimating(false), ANIMATION_DURATION);
-  }, [setZoom, setPan]);
+  }, [updateViewState, nodes, dimensions]);
 
   // 자동 팬 (드래그 시 화면 경계에서 자동 이동)
   const handleAutoPan = useCallback((dx: number, dy: number) => {

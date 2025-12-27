@@ -12,7 +12,7 @@
 import type { TaskNode, TaskEdge, Priority, TaskStatus } from '../types';
 
 // API 기본 URL (AWS ELB)
-const API_BASE_URL = 'http://abaf276fc5e72484787296abb07ba4f6-1149347558.ap-northeast-2.elb.amazonaws.com/api';
+const API_BASE_URL = 'http://abeb024c18b384897a48a36954fa1c12-931125860.ap-northeast-2.elb.amazonaws.com/api';
 
 /**
  * 백엔드 Task 응답 타입 (MongoDB _id 사용)
@@ -331,7 +331,7 @@ export async function autoArrange(): Promise<AutoArrangePosition[]> {
  */
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch('http://abaf276fc5e72484787296abb07ba4f6-1149347558.ap-northeast-2.elb.amazonaws.com/health', { 
+    const response = await fetch('http://abeb024c18b384897a48a36954fa1c12-931125860.ap-northeast-2.elb.amazonaws.com/health', { 
       method: 'GET',
       signal: AbortSignal.timeout(3000), // 3초 타임아웃
     });

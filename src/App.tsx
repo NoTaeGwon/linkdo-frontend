@@ -402,7 +402,7 @@ const TagFilterButton = forwardRef<HTMLDivElement, TagFilterButtonProps>(
         onClick={onToggleFilter}
         title="태그 필터"
       >
-        🏷️ {selectedTags.length > 0 && <span className="tag-count">{selectedTags.length}</span>}
+        🏷️
       </button>
 
       {showTagFilter && (

@@ -38,6 +38,40 @@ D3-Force 물리 시뮬레이션을 활용한 **인터랙티브 그래프**와 **
 
 <br>
 
+## 🎬 데모
+
+### 노드 드래그 & 물리 시뮬레이션
+<p align="center">
+  <img src="docs/linkdo-드래그.gif" alt="드래그 데모" width="600"/>
+</p>
+
+### PCA 기반 자동정렬
+<p align="center">
+  <img src="docs/linkdo-자동정렬.gif" alt="자동정렬 데모" width="600"/>
+</p>
+
+### AI 태그 추천
+<p align="center">
+  <img src="docs/linkdo-AI 태그 추천.gif" alt="AI 태그 추천 데모" width="600"/>
+</p>
+
+### 태스크 CRUD
+<p align="center">
+  <img src="docs/linkdo-CRUD.gif" alt="CRUD 데모" width="600"/>
+</p>
+
+### 실시간 검색
+<p align="center">
+  <img src="docs/linkdo-검색.gif" alt="검색 데모" width="600"/>
+</p>
+
+### 줌 & 팬
+<p align="center">
+  <img src="docs/linkdo-줌 & 팬.gif" alt="줌 팬 데모" width="600"/>
+</p>
+
+<br>
+
 ## 🛠️ 기술 스택
 
 | 영역 | 기술 |
