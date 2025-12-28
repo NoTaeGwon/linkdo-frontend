@@ -12,6 +12,22 @@ D3-Force 물리 시뮬레이션을 활용한 **인터랙티브 그래프**와 **
   <img src="https://img.shields.io/badge/D3--Force-3.0-F9A03C?style=for-the-badge&logo=d3.js&logoColor=white" alt="D3"/>
 </p>
 
+<p align="center">
+  <a href="http://linkdo-frontend-app.s3-website.ap-northeast-2.amazonaws.com">
+    <img src="https://img.shields.io/badge/🌐_Live_Demo-바로가기-00C853?style=for-the-badge" alt="Live Demo"/>
+  </a>
+</p>
+
+<br>
+
+## 🌐 라이브 데모
+
+> **[👉 Linkdo 바로가기](http://linkdo-frontend-app.s3-website.ap-northeast-2.amazonaws.com)**
+
+- ✅ PWA 지원 - 브라우저에서 **"앱 설치"** 가능!
+- ✅ 오프라인 모드 - 인터넷 없이도 사용 가능
+- ✅ 모바일 최적화 - 반응형 디자인
+
 <br>
 
 ## ✨ 주요 기능
@@ -156,6 +172,16 @@ npm run build
 
 # 빌드 미리보기
 npm run preview
+```
+
+### 배포 (AWS S3)
+
+```bash
+# 빌드
+npm run build
+
+# S3에 업로드
+aws s3 sync ./dist s3://linkdo-frontend-app --delete
 ```
 
 <br>
