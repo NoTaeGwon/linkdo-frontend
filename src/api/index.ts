@@ -11,8 +11,22 @@
 
 import type { TaskNode, TaskEdge, Priority, TaskStatus } from '../types';
 
-// API 기본 URL (AWS ELB)
-const API_BASE_URL = 'http://abeb024c18b384897a48a36954fa1c12-931125860.ap-northeast-2.elb.amazonaws.com/api';
+// API 기본 URL
+const API_BASE_URL = 'http://localhost:8000/api';
+
+/**
+ * Workspace ID 관리
+ * - localStorage에서 가져오거나 새로 생성
+ * - 사용자별 데이터 분리를 위해 사용
+ */
+function getWorkspaceId(): string {
+  let workspaceId = localStorage.getItem('workspaceId');
+  if (!workspaceId) {
+    workspaceId = crypto.randomUUID();
+    localStorage.setItem('workspaceId', workspaceId);
+  }
+  return workspaceId;
+}
 
 /**
  * 백엔드 Task 응답 타입 (MongoDB _id 사용)
@@ -64,6 +78,7 @@ async function apiRequest<T>(
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
+      'X-Workspace-ID': getWorkspaceId(),
       ...options.headers,
     },
     ...options,
@@ -331,8 +346,11 @@ export async function autoArrange(): Promise<AutoArrangePosition[]> {
  */
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch('http://abeb024c18b384897a48a36954fa1c12-931125860.ap-northeast-2.elb.amazonaws.com/health', { 
+    const response = await fetch('http://localhost:8000/health', { 
       method: 'GET',
+      headers: {
+        'X-Workspace-ID': getWorkspaceId(),
+      },
       signal: AbortSignal.timeout(3000), // 3초 타임아웃
     });
     return response.ok;
