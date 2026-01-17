@@ -12,7 +12,7 @@
 import type { TaskNode, TaskEdge, Priority, TaskStatus } from '../types';
 
 // API 기본 URL
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 /**
  * Workspace ID 관리
@@ -74,7 +74,7 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
-  
+
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ function toTaskEdge(apiEdge: ApiEdge): TaskEdge {
 /**
  * 그래프 데이터 통합 조회 (태스크 + 엣지)
  */
-export async function fetchGraphData(): Promise<{ tasks: TaskNode[], edges: TaskEdge[] } > {
+export async function fetchGraphData(): Promise<{ tasks: TaskNode[], edges: TaskEdge[] }> {
   const data = await apiRequest<{ tasks: ApiTask[], edges: ApiEdge[] }>('/graph');
   return {
     tasks: data.tasks.map(toTaskNode),
@@ -196,12 +196,12 @@ export async function fetchTask(id: string): Promise<TaskNode> {
 export async function updateTaskApi(id: string, updates: Partial<TaskNode>): Promise<TaskNode> {
   // d3-force 관련 속성 제거, dueDate를 due_date로 변환
   const { x, y, fx, fy, vx, vy, index, dueDate, ...cleanUpdates } = updates;
-  
+
   const apiUpdates = {
     ...cleanUpdates,
     ...(dueDate !== undefined && { due_date: dueDate }),
   };
-  
+
   const updated = await apiRequest<ApiTask>(`/tasks/${id}`, {
     method: 'PUT',
     body: JSON.stringify(apiUpdates),
@@ -303,12 +303,12 @@ export async function suggestTags(title: string, description?: string): Promise<
       description: description || '',
     }),
   });
-  
+
   // 응답에서 tags 배열 추출
   if (response && response.tags && Array.isArray(response.tags)) {
     return response.tags.map(tag => String(tag).trim()).filter(tag => tag.length > 0);
   }
-  
+
   console.warn('예상치 못한 API 응답 형식:', response);
   return [];
 }
@@ -346,7 +346,7 @@ export async function autoArrange(): Promise<AutoArrangePosition[]> {
  */
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:8000/health', { 
+    const response = await fetch('http://localhost:8080/health', {
       method: 'GET',
       headers: {
         'X-Workspace-ID': getWorkspaceId(),
