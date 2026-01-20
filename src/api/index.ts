@@ -11,8 +11,8 @@
 
 import type { TaskNode, TaskEdge, Priority, TaskStatus } from '../types';
 
-// API 기본 URL
-const API_BASE_URL = 'http://localhost:8080/api';
+// API 기본 URL (환경변수에서 가져옴)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://api.linkdo.local/api';
 
 /**
  * Workspace ID 관리
@@ -20,10 +20,10 @@ const API_BASE_URL = 'http://localhost:8080/api';
  * - 사용자별 데이터 분리를 위해 사용
  */
 function getWorkspaceId(): string {
-  let workspaceId = localStorage.getItem('workspaceId');
+  let workspaceId = localStorage.getItem('workspace_id');
   if (!workspaceId) {
     workspaceId = crypto.randomUUID();
-    localStorage.setItem('workspaceId', workspaceId);
+    localStorage.setItem('workspace_id', workspaceId);
   }
   return workspaceId;
 }
@@ -346,7 +346,8 @@ export async function autoArrange(): Promise<AutoArrangePosition[]> {
  */
 export async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch('http://localhost:8080/health', {
+    const healthUrl = API_BASE_URL.replace(/\/api$/, '/health');
+    const response = await fetch(healthUrl, {
       method: 'GET',
       headers: {
         'X-Workspace-ID': getWorkspaceId(),
