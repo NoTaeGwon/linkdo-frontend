@@ -112,7 +112,10 @@ D3-Force 물리 시뮬레이션을 활용한 **인터랙티브 그래프**와 **
 ## 📁 프로젝트 구조
 
 ```
+.env.development            # 개발 환경변수
+.env.production             # 프로덕션 환경변수
 src/
+├── vite-env.d.ts           # Vite 환경변수 타입 선언
 ├── api/                    # API 클라이언트
 │   └── index.ts           # REST API 함수들
 ├── components/
@@ -160,8 +163,22 @@ cd linkdo-frontend
 # 의존성 설치
 npm install
 
+# 환경변수 설정
+cp .env.example .env.development
+# .env.development 파일에서 VITE_API_URL 수정
+
 # 개발 서버 실행
 npm run dev
+```
+
+### 환경변수 설정
+
+```bash
+# .env.development (개발 환경)
+VITE_API_URL=http://api.linkdo.local/api
+
+# .env.production (프로덕션 환경)
+VITE_API_URL=https://api.linkdo.com/api
 ```
 
 ### 빌드
