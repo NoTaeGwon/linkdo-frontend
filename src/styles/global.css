@@ -48,7 +48,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: 
+  background:
     radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 100%, rgba(236, 72, 153, 0.06) 0%, transparent 50%),
     var(--bg-primary);
@@ -85,8 +85,17 @@ body {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
 }
 
 .logo h1 {
@@ -110,6 +119,37 @@ body {
 .header-actions {
   display: flex;
   gap: 12px;
+  align-items: center;
+}
+
+/* 검색 & 필터 영역 (온보딩 하이라이트용) */
+.search-filter-area {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Help Button */
+.help-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #888;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.help-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
 }
 
 /* Buttons */
@@ -177,6 +217,7 @@ body {
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -184,8 +225,13 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /* Scrollbar */
@@ -303,6 +349,7 @@ body {
     opacity: 0;
     transform: translateX(-50%) translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -311,10 +358,13 @@ body {
 
 /* SVG 애니메이션 (연결 모드 펄스) */
 @keyframes pulse-ring {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 0.8;
   }
+
   50% {
     transform: scale(1.15);
     opacity: 0.4;
@@ -357,6 +407,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -683,6 +734,7 @@ body {
     opacity: 0;
     transform: translateX(-50%) translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
@@ -1103,7 +1155,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-title {
@@ -1275,7 +1329,8 @@ body {
   border: 1px solid rgba(99, 102, 241, 0.3);
   border-radius: 20px;
   z-index: 100;
-  max-width: calc(100vw - 300px); /* 좌우 여백 확보 */
+  max-width: calc(100vw - 300px);
+  /* 좌우 여백 확보 */
 }
 
 .filter-label {
@@ -1725,4 +1780,3 @@ body {
 .btn-delete-confirm:hover {
   background: #dc2626;
 }
-

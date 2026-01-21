@@ -104,6 +104,7 @@ export function MiniMap({ nodes, zoom, pan, containerSize, onPanChange }: MiniMa
 
   return (
     <div
+      className="minimap"
       style={{
         position: 'absolute',
         bottom: '20px',
@@ -133,7 +134,7 @@ export function MiniMap({ nodes, zoom, pan, containerSize, onPanChange }: MiniMa
           const x = node.x ?? 0;
           const y = node.y ?? 0;
           const color = CATEGORY_COLORS[node.category || 'planning'] || '#6366f1';
-          
+
           return (
             <circle
               key={node.id}

@@ -15,6 +15,7 @@ import { Graph, type ViewState } from './components/Graph';
 import { TaskPanel } from './components/TaskPanel';
 import { SearchBar } from './components/SearchBar';
 import { AddTaskModal, AutoArrangeModal, LoadingOverlay } from './components/modals';
+import { Onboarding, resetOnboarding } from './components/Onboarding';
 import { useTaskStore } from './hooks/useTaskStore';
 import type { TaskNode, Priority } from './types';
 import { TOAST_DURATION, TASK_SELECT_DELAY } from './constants';
@@ -36,6 +37,9 @@ function App() {
   const [showAutoArrangeModal, setShowAutoArrangeModal] = useState(false);
   const [isAutoArranging, setIsAutoArranging] = useState(false);
   const [autoArrangeProgress, setAutoArrangeProgress] = useState({ current: 0, total: 0, taskTitle: '' });
+
+  // 온보딩 투어 상태
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Refs
   const initialCenterDone = useRef(false);
@@ -239,34 +243,49 @@ function App() {
         </div>
 
         <div className="header-actions">
-          {/* 태그 필터 */}
-          <TagFilterButton
-            ref={tagFilterRef}
-            allTags={allTags}
-            selectedTags={selectedTags}
-            showTagFilter={showTagFilter}
-            tasks={tasks}
-            onToggleFilter={() => setShowTagFilter(!showTagFilter)}
-            onToggleTag={toggleTag}
-            onClearFilter={clearTagFilter}
-          />
+          {/* 검색 & 필터 영역 */}
+          <div className="search-filter-area">
+            {/* 태그 필터 */}
+            <TagFilterButton
+              ref={tagFilterRef}
+              allTags={allTags}
+              selectedTags={selectedTags}
+              showTagFilter={showTagFilter}
+              tasks={tasks}
+              onToggleFilter={() => setShowTagFilter(!showTagFilter)}
+              onToggleTag={toggleTag}
+              onClearFilter={clearTagFilter}
+            />
 
-          {/* 검색 바 */}
-          <SearchBar tasks={tasks} onSelectTask={setSelectedNode} />
+            {/* 검색 바 */}
+            <SearchBar tasks={tasks} onSelectTask={setSelectedNode} />
+          </div>
 
           {/* 태스크 추가 버튼 */}
-          <button className="btn-secondary" onClick={() => setShowAddModal(true)}>
+          <button className="btn-secondary add-task-btn" onClick={() => setShowAddModal(true)}>
             <span>+</span> Add Task
           </button>
 
           {/* 자동정렬 버튼 */}
           <button
-            className="btn-secondary"
+            className="btn-secondary auto-arrange-btn"
             onClick={() => setShowAutoArrangeModal(true)}
             disabled={!isApiAvailable || tasks.length < 2}
             title={!isApiAvailable ? '서버 연결 필요' : tasks.length < 2 ? '태스크가 2개 이상 필요합니다' : 'PCA 기반 자동 배치'}
           >
             <span>📍</span> 자동정렬
+          </button>
+
+          {/* 도움말 버튼 */}
+          <button
+            className="help-btn"
+            onClick={() => {
+              resetOnboarding();
+              setShowOnboarding(true);
+            }}
+            title="사용법 보기"
+          >
+            ?
           </button>
         </div>
       </header>
@@ -375,6 +394,12 @@ function App() {
           taskTitle={autoArrangeProgress.taskTitle}
         />
       )}
+
+      {/* 온보딩 투어 */}
+      <Onboarding
+        forceShow={showOnboarding}
+        onComplete={() => setShowOnboarding(false)}
+      />
     </div>
   );
 }

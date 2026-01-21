@@ -1,0 +1,162 @@
+/* 온보딩 투어 스타일 */
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.onboarding-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+}
+
+/* 하이라이트 영역 (구멍 효과) */
+.onboarding-highlight {
+  position: absolute;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 9999px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(99, 102, 241, 0.5);
+  border: 2px solid #6366f1;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* 툴팁 */
+.onboarding-tooltip {
+  position: absolute;
+  width: 320px;
+  background: linear-gradient(145deg, #1e1e2e, #2a2a3e);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(99, 102, 241, 0.2);
+  pointer-events: auto;
+  z-index: 10001;
+  transition: all 0.3s ease;
+  animation: tooltipFadeIn 0.3s ease;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.onboarding-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.onboarding-step-indicator {
+  font-size: 12px;
+  color: #6366f1;
+  font-weight: 600;
+  background: rgba(99, 102, 241, 0.15);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.onboarding-skip-btn {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.onboarding-skip-btn:hover {
+  color: #fff;
+}
+
+.onboarding-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.onboarding-content {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1.6;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.onboarding-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.onboarding-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+}
+
+.onboarding-btn-primary:hover {
+  background: linear-gradient(135deg, #5558e3, #7c4fe8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.onboarding-btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.onboarding-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* 도움말 버튼 (헤더에 추가할 버튼) */
+.help-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #888;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.help-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+}

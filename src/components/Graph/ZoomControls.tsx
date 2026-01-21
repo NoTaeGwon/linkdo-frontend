@@ -36,6 +36,7 @@ export function ZoomControls({ zoom, onZoomIn, onZoomOut, onReset }: ZoomControl
 
   return (
     <div
+      className="zoom-controls"
       style={{
         position: 'absolute',
         bottom: '20px',

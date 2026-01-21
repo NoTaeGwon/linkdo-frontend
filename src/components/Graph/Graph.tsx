@@ -18,11 +18,11 @@ import { GraphEdge } from './GraphEdge';
 import { MiniMap } from './MiniMap';
 import { Legend } from './Legend';
 import { ZoomControls } from './ZoomControls';
-import { 
-  ANIMATION_DURATION, 
-  CENTER_SKIP_DISTANCE, 
-  MIN_ZOOM, 
-  MAX_ZOOM, 
+import {
+  ANIMATION_DURATION,
+  CENTER_SKIP_DISTANCE,
+  MIN_ZOOM,
+  MAX_ZOOM,
   ZOOM_STEP,
   ZOOM_BUTTON_STEP,
   GRID_SIZE,
@@ -42,9 +42,9 @@ interface GraphProps {
   linkingMode?: string | null; // 연결 모드: 시작 노드 ID
 }
 
-export function Graph({ 
-  data, 
-  selectedNodeId: externalSelectedId, 
+export function Graph({
+  data,
+  selectedNodeId: externalSelectedId,
   onNodeSelect,
   viewState: externalViewState,
   onViewStateChange,
@@ -53,11 +53,11 @@ export function Graph({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
-  
+
   // 내부 상태 (props가 없을 때 사용)
-  const [internalViewState, setInternalViewState] = useState<ViewState>({ 
-    zoom: 1, 
-    pan: { x: 0, y: 0 } 
+  const [internalViewState, setInternalViewState] = useState<ViewState>({
+    zoom: 1,
+    pan: { x: 0, y: 0 }
   });
 
   // 외부 props 우선 사용, 없으면 내부 상태 사용
@@ -68,7 +68,7 @@ export function Graph({
   const updateViewState = useCallback((updates: Partial<ViewState>) => {
     const currentState = { zoom, pan };
     const nextState = { ...currentState, ...updates };
-    
+
     if (onViewStateChange) {
       onViewStateChange(nextState);
     } else {
@@ -91,7 +91,7 @@ export function Graph({
   const [isAnimating, setIsAnimating] = useState(false);  // 애니메이션 중인지
   const panStart = useRef({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
-  
+
   const selectedNodeId = externalSelectedId !== undefined ? externalSelectedId : internalSelectedId;
 
   // 컨테이너 크기 감지
@@ -154,11 +154,11 @@ export function Graph({
   // 선택된 노드를 화면 중앙으로 이동 (애니메이션)
   const centerOnNode = useCallback((node: TaskNode) => {
     if (!node.x || !node.y) return;
-    
+
     // 화면 중앙 좌표
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
-    
+
     // 노드가 화면 중앙에 오도록 pan 값 계산
     const newPanX = centerX - node.x * zoom;
     const newPanY = centerY - node.y * zoom;
@@ -168,11 +168,11 @@ export function Graph({
       Math.pow(newPanX - pan.x, 2) + Math.pow(newPanY - pan.y, 2)
     );
     if (dist < CENTER_SKIP_DISTANCE) return;
-    
+
     // 애니메이션 시작
     setIsAnimating(true);
     setPan({ x: newPanX, y: newPanY });
-    
+
     // 애니메이션 종료 (transition 시간과 맞춤)
     setTimeout(() => setIsAnimating(false), ANIMATION_DURATION);
   }, [dimensions, zoom, pan]);
@@ -215,12 +215,12 @@ export function Graph({
 
     // 선택된 노드가 없으면 리턴
     if (!externalSelectedId) return;
-    
+
     // 2. 이미 현재 ID로 이동을 완료했다면 스킵 (nodes만 업데이트된 경우 이동 방지)
     if (lastCenteredIdRef.current === externalSelectedId) return;
-    
+
     const node = nodes.find((n) => n.id === externalSelectedId);
-    
+
     // 노드가 존재하고 좌표가 유효한 경우에만 이동 수행
     if (node && node.x && node.y) {
       centerOnNode(node);
@@ -232,7 +232,7 @@ export function Graph({
   const handleBackgroundClick = useCallback(() => {
     // 팬 중이었으면 선택 해제하지 않음
     if (isPanning) return;
-    
+
     setInternalSelectedId(null);
     if (onNodeSelect) {
       onNodeSelect(null);
@@ -257,14 +257,14 @@ export function Graph({
     if (!svg) return;
 
     const handleWheel = (e: WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-    setZoom(prev => Math.min(Math.max(prev + delta, MIN_ZOOM), MAX_ZOOM));
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+      setZoom(prev => Math.min(Math.max(prev + delta, MIN_ZOOM), MAX_ZOOM));
     };
 
     // passive: false로 등록해야 preventDefault() 사용 가능
     svg.addEventListener('wheel', handleWheel, { passive: false });
-    
+
     return () => {
       svg.removeEventListener('wheel', handleWheel);
     };
@@ -273,8 +273,8 @@ export function Graph({
   // 팬 시작 (마우스 다운)
   const handlePanStart = useCallback((e: React.MouseEvent) => {
     // 노드가 아닌 배경에서만 팬 시작
-    if ((e.target as HTMLElement).tagName === 'svg' || 
-        (e.target as HTMLElement).tagName === 'rect') {
+    if ((e.target as HTMLElement).tagName === 'svg' ||
+      (e.target as HTMLElement).tagName === 'rect') {
       setIsPanning(true);
       panStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
     }
@@ -283,7 +283,7 @@ export function Graph({
   // 팬 중 (마우스 이동)
   const handlePanMove = useCallback((e: React.MouseEvent) => {
     if (!isPanning) return;
-    
+
     setPan({
       x: e.clientX - panStart.current.x,
       y: e.clientY - panStart.current.y,
@@ -298,11 +298,11 @@ export function Graph({
   // 뷰 리셋 (애니메이션) - 노드 중심으로 이동
   const handleResetView = useCallback(() => {
     setIsAnimating(true);
-    
+
     // 노드 중심 계산
     const positionedNodes = nodes.filter(n => n.x !== undefined && n.y !== undefined);
     let newPan = { x: 0, y: 0 };
-    
+
     if (positionedNodes.length > 0) {
       const centerX = positionedNodes.reduce((sum, n) => sum + (n.x || 0), 0) / positionedNodes.length;
       const centerY = positionedNodes.reduce((sum, n) => sum + (n.y || 0), 0) / positionedNodes.length;
@@ -313,10 +313,10 @@ export function Graph({
         y: screenCenterY - centerY,
       };
     }
-    
+
     // 한 번에 업데이트
     updateViewState({ zoom: 1, pan: newPan });
-    
+
     setTimeout(() => setIsAnimating(false), ANIMATION_DURATION);
   }, [updateViewState, nodes, dimensions]);
 
@@ -331,6 +331,7 @@ export function Graph({
   return (
     <div
       ref={containerRef}
+      className="graph-container"
       style={{
         width: '100%',
         height: '100%',
@@ -375,12 +376,12 @@ export function Graph({
         onMouseMove={handlePanMove}
         onMouseUp={handlePanEnd}
         onMouseLeave={handlePanEnd}
-        style={{ 
+        style={{
           cursor: isPanning ? 'grabbing' : 'grab',
         }}
       >
         {/* 변환 그룹 - 줌 & 팬 적용 */}
-        <g 
+        <g
           transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}
           style={{
             transition: isAnimating && !isPanning ? 'transform 0.4s ease-out' : 'none',
@@ -417,7 +418,7 @@ export function Graph({
               const isHighlighted = connected.has(node.id) && !isSelected;
               const isBlurred =
                 selectedNodeId !== null && !connected.has(node.id);
-              
+
               // 연결 모드 관련
               const isLinkingSource = linkingMode === node.id;
               const isLinkingTarget = linkingMode !== null && linkingMode !== node.id;
