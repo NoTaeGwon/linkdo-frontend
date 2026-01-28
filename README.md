@@ -13,7 +13,7 @@ D3-Force 물리 시뮬레이션을 활용한 **인터랙티브 그래프**와 **
 </p>
 
 <p align="center">
-  <a href="http://linkdo-frontend-app.s3-website.ap-northeast-2.amazonaws.com">
+  <a href="https://linkdo.cloud">
     <img src="https://img.shields.io/badge/🌐_Live_Demo-바로가기-00C853?style=for-the-badge" alt="Live Demo"/>
   </a>
 </p>
@@ -22,7 +22,13 @@ D3-Force 물리 시뮬레이션을 활용한 **인터랙티브 그래프**와 **
 
 ## 🌐 라이브 데모
 
-> **[👉 Linkdo 바로가기](http://linkdo-frontend-app.s3-website.ap-northeast-2.amazonaws.com)**
+> **[👉 Linkdo 바로가기](https://linkdo.cloud)**
+
+| 서비스 | URL |
+|--------|-----|
+| **프론트엔드** | https://linkdo.cloud |
+| **백엔드 API** | https://api.linkdo.cloud |
+| **API 문서** | https://api.linkdo.cloud/docs |
 
 - ✅ PWA 지원 - 브라우저에서 **"앱 설치"** 가능!
 - ✅ 오프라인 모드 - 인터넷 없이도 사용 가능
@@ -48,7 +54,7 @@ D3-Force 물리 시뮬레이션을 활용한 **인터랙티브 그래프**와 **
 - **설치 가능**: 네이티브 앱처럼 홈 화면에 추가
 
 ### 🎨 모던 UI/UX
-- **다크 테마**: 눈의 피로를 줄이는 세련된 다크 모드
+- **다크 테마**: 눈의 피로를 줄이는 다크 모드
 - **미니맵**: 전체 그래프를 한눈에 조망
 - **검색 & 필터**: 태그 기반 필터링과 실시간 검색
 - **온보딩 투어**: 첫 방문 사용자를 위한 단계별 기능 안내
@@ -178,10 +184,10 @@ npm run dev
 
 ```bash
 # .env.development (개발 환경)
-VITE_API_URL=http://api.linkdo.local/api
+VITE_API_URL=http://localhost:8000/api
 
 # .env.production (프로덕션 환경)
-VITE_API_URL=https://api.linkdo.com/api
+VITE_API_URL=https://api.linkdo.cloud/api
 ```
 
 ### 빌드
@@ -194,15 +200,20 @@ npm run build
 npm run preview
 ```
 
-### 배포 (AWS S3)
+### 배포 (Vercel)
 
 ```bash
-# 빌드
-npm run build
+# Vercel CLI 설치
+npm i -g vercel
 
-# S3에 업로드
-aws s3 sync ./dist s3://linkdo-frontend-app --delete
+# 배포
+vercel
+
+# 프로덕션 배포
+vercel --prod
 ```
+
+또는 GitHub 연동으로 **자동 배포** 설정 가능 (push 시 자동 빌드/배포)
 
 <br>
 
