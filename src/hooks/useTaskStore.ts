@@ -17,7 +17,6 @@ import {
   syncCacheFromServer, 
   addPendingOperation, 
   getPendingOperations,
-  removePendingOperation,
   getPendingOperationsCount,
 } from '../db';
 import { sampleNodes, sampleEdges } from '../data/sampleData';
@@ -57,7 +56,7 @@ export function useTaskStore() {
   }, []);
 
   // ================================================================
-  // 오프라인 작업 동기화
+  // 오프라인 작업 동기화 (새로운 /api/tasks/sync API 사용)
   // ================================================================
   const syncPendingOperations = useCallback(async () => {
     if (isSyncingRef.current) return;
@@ -68,64 +67,99 @@ export function useTaskStore() {
       const pending = await getPendingOperations();
       console.log(`📤 동기화할 작업: ${pending.length}개`);
 
-      for (const op of pending) {
-        try {
-          if (op.entity === 'task') {
-            switch (op.type) {
-              case 'create':
-                if (op.data) {
-                  const taskData = op.data as Partial<TaskNode>;
-                  await api.createTask({
-                    id: taskData.id || '',
-                    title: taskData.title || '',
-                    description: taskData.description,
-                    priority: taskData.priority || 'medium',
-                    status: taskData.status || 'todo',
-                    category: taskData.category,
-                    tags: taskData.tags || [],
-                  });
-                }
-                break;
-              case 'update':
-                if (op.data) {
-                  await api.updateTaskApi(op.entityId, op.data as Partial<TaskNode>);
-                }
-                break;
-              case 'delete':
-                await api.deleteTaskApi(op.entityId);
-                break;
-            }
-          } else if (op.entity === 'edge') {
-            switch (op.type) {
-              case 'create':
-                if (op.data) {
-                  const edgeData = op.data as { source: string; target: string; weight: number };
-                  await api.createEdge(edgeData.source, edgeData.target, edgeData.weight);
-                }
-                break;
-              case 'delete':
-                if (op.data) {
-                  const edgeData = op.data as { source: string; target: string };
-                  await api.deleteEdgeApi(edgeData.source, edgeData.target);
-                }
-                break;
-            }
-          }
+      if (pending.length === 0) {
+        console.log('✅ 동기화할 작업 없음');
+        isSyncingRef.current = false;
+        return;
+      }
 
-          // 성공 시 대기 작업 삭제
-          if (op.id) {
-            await removePendingOperation(op.id);
+      // 대기 작업들을 TaskSync, EdgeSync 형식으로 변환
+      const taskSyncMap = new Map<string, api.TaskSync>();
+      const edgeSyncMap = new Map<string, api.EdgeSync>();
+
+      for (const op of pending) {
+        if (op.entity === 'task') {
+          const taskData = op.data as Partial<TaskNode> | undefined;
+          
+          if (op.type === 'delete') {
+            // 삭제된 태스크
+            taskSyncMap.set(op.entityId, {
+              id: op.entityId,
+              title: '',
+              priority: 'medium',
+              status: 'todo',
+              category: '',
+              tags: [],
+              deleted: true,
+            });
+          } else if (taskData) {
+            // 생성 또는 수정된 태스크
+            const existingSync = taskSyncMap.get(op.entityId);
+            taskSyncMap.set(op.entityId, {
+              id: taskData.id || op.entityId,
+              title: taskData.title || existingSync?.title || '',
+              description: taskData.description || existingSync?.description,
+              priority: taskData.priority || existingSync?.priority || 'medium',
+              status: taskData.status || existingSync?.status || 'todo',
+              category: taskData.category || existingSync?.category || '',
+              tags: taskData.tags || existingSync?.tags || [],
+              due_date: taskData.dueDate || existingSync?.due_date,
+              updated_at: new Date().toISOString(),
+              deleted: false,
+            });
           }
-        } catch (error) {
-          console.error(`❌ 작업 동기화 실패:`, op, error);
-          // 개별 작업 실패 시 다음 작업 계속 진행
+        } else if (op.entity === 'edge') {
+          const edgeData = op.data as { source: string; target: string; weight?: number } | undefined;
+          
+          if (edgeData) {
+            const edgeKey = `${edgeData.source}:${edgeData.target}`;
+            
+            if (op.type === 'delete') {
+              edgeSyncMap.set(edgeKey, {
+                source: edgeData.source,
+                target: edgeData.target,
+                weight: edgeData.weight || 0.5,
+                deleted: true,
+              });
+            } else {
+              edgeSyncMap.set(edgeKey, {
+                source: edgeData.source,
+                target: edgeData.target,
+                weight: edgeData.weight || 0.5,
+                deleted: false,
+              });
+            }
+          }
         }
       }
 
-      // 서버에서 최신 데이터 다시 로드
-      await loadFromServer();
+      const syncRequest: api.SyncRequest = {
+        tasks: Array.from(taskSyncMap.values()),
+        edges: Array.from(edgeSyncMap.values()),
+      };
+
+      console.log('📤 동기화 요청:', {
+        tasks: syncRequest.tasks.length,
+        edges: syncRequest.edges.length,
+      });
+
+      // 새로운 sync API 호출
+      const result = await api.syncOfflineChanges(syncRequest);
+
+      console.log('📥 동기화 결과:', result.syncStats);
+
+      // 서버 데이터로 로컬 상태 갱신
+      setTasks(result.tasks);
+      setEdges(result.edges);
+
+      // 로컬 캐시 업데이트
+      await syncCacheFromServer(result.tasks, result.edges);
+
+      // 대기 작업 모두 삭제
+      await db.pendingOperations.clear();
       await updatePendingCount();
-      console.log('✅ 동기화 완료');
+
+      console.log('✅ 동기화 완료:', result.syncStats);
     } catch (error) {
       console.error('❌ 동기화 실패:', error);
       setSyncError('동기화 중 오류가 발생했습니다.');

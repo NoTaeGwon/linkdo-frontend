@@ -338,6 +338,80 @@ export async function autoArrange(): Promise<AutoArrangePosition[]> {
 }
 
 // ================================================================
+// 오프라인 동기화 API
+// ================================================================
+
+/**
+ * 동기화 요청 타입
+ */
+export interface TaskSync {
+  id: string;
+  title: string;
+  description?: string;
+  priority: Priority;
+  status: TaskStatus;
+  category?: string;
+  tags: string[];
+  due_date?: string;
+  updated_at?: string;
+  deleted: boolean;
+}
+
+export interface EdgeSync {
+  source: string;
+  target: string;
+  weight: number;
+  deleted: boolean;
+}
+
+export interface SyncRequest {
+  tasks: TaskSync[];
+  edges: EdgeSync[];
+  last_sync_at?: string;
+}
+
+/**
+ * 동기화 응답 타입
+ */
+export interface SyncResponse {
+  tasks: ApiTask[];
+  edges: ApiEdge[];
+  sync_stats: {
+    tasks_created: number;
+    tasks_updated: number;
+    tasks_deleted: number;
+    edges_created: number;
+    edges_updated: number;
+    edges_deleted: number;
+  };
+  synced_at: string;
+}
+
+/**
+ * 오프라인 변경사항 동기화
+ * @param request 동기화할 태스크와 엣지 목록
+ * @returns 서버의 최신 데이터와 동기화 통계
+ */
+export async function syncOfflineChanges(request: SyncRequest): Promise<{
+  tasks: TaskNode[];
+  edges: TaskEdge[];
+  syncStats: SyncResponse['sync_stats'];
+  syncedAt: string;
+}> {
+  const response = await apiRequest<SyncResponse>('/tasks/sync', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+
+  return {
+    tasks: response.tasks.map(toTaskNode),
+    edges: response.edges.map(toTaskEdge),
+    syncStats: response.sync_stats,
+    syncedAt: response.synced_at,
+  };
+}
+
+// ================================================================
 // 헬스 체크
 // ================================================================
 
