@@ -12,7 +12,7 @@
 import type { TaskNode, TaskEdge, Priority, TaskStatus } from '../types';
 
 // API 기본 URL (환경변수에서 가져옴)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.linkdo.cloud/api';
 
 /**
  * Workspace ID 관리
