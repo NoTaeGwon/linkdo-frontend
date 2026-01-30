@@ -51,6 +51,12 @@ const TOUR_STEPS: TourStep[] = [
     content: 'AI가 태스크의 유사도를 분석하여 관련 있는 태스크끼리 가깝게 배치합니다.',
     position: 'bottom',
   },
+  {
+    target: '.add-task-btn',
+    title: '💾 데이터 백업 안내',
+    content: 'Linkdo는 로그인 없이 사용 가능하지만, 브라우저 데이터 삭제 시 태스크가 사라질 수 있습니다. "데이터 관리" 탭에서 주기적으로 백업하세요!',
+    position: 'bottom',
+  },
 ];
 
 const STORAGE_KEY = 'linkdo_onboarding_completed';

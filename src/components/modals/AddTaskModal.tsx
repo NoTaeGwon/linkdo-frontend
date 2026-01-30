@@ -9,9 +9,48 @@
  * ================================================================
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Priority } from '../../types';
 import { DatePicker } from '../DatePicker';
+
+// 마지막 백업 시간 localStorage 키
+const LAST_BACKUP_KEY = 'linkdo_last_backup';
+
+// 마지막 백업 시간 저장
+export function saveLastBackupTime(): void {
+  localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString());
+}
+
+// 마지막 백업 시간 조회
+export function getLastBackupTime(): Date | null {
+  const saved = localStorage.getItem(LAST_BACKUP_KEY);
+  return saved ? new Date(saved) : null;
+}
+
+// 백업 경과 일수 계산
+function getDaysSinceBackup(lastBackup: Date | null): number | null {
+  if (!lastBackup) return null;
+  const now = new Date();
+  const diffTime = now.getTime() - lastBackup.getTime();
+  return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+}
+
+// 백업 상태 텍스트 생성
+function getBackupStatusText(days: number | null): { text: string; isWarning: boolean } {
+  if (days === null) {
+    return { text: '백업 기록 없음', isWarning: true };
+  }
+  if (days === 0) {
+    return { text: '오늘', isWarning: false };
+  }
+  if (days === 1) {
+    return { text: '어제', isWarning: false };
+  }
+  if (days < 7) {
+    return { text: `${days}일 전`, isWarning: false };
+  }
+  return { text: `${days}일 전`, isWarning: true };
+}
 
 interface AddTaskModalProps {
   onClose: () => void;
@@ -51,6 +90,14 @@ export function AddTaskModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 마지막 백업 시간 상태
+  const [lastBackupDays, setLastBackupDays] = useState<number | null>(null);
+  
+  useEffect(() => {
+    const lastBackup = getLastBackupTime();
+    setLastBackupDays(getDaysSinceBackup(lastBackup));
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,6 +233,11 @@ export function AddTaskModal({
             onClick={() => setActiveTab('data')}
           >
             📂 데이터 관리
+            {activeTab !== 'data' && (
+              <span className={`backup-status-badge ${getBackupStatusText(lastBackupDays).isWarning ? 'warning' : ''}`}>
+                {getBackupStatusText(lastBackupDays).isWarning ? '⚠️' : '✓'}
+              </span>
+            )}
           </button>
         </div>
 
@@ -335,13 +387,20 @@ export function AddTaskModal({
           <div>
             {/* 내보내기 섹션 */}
             <div className="data-section export">
-              <h3>📤 데이터 내보내기</h3>
+              <div className="data-section-header">
+                <h3>📤 데이터 내보내기</h3>
+                <span className={`last-backup-info ${getBackupStatusText(lastBackupDays).isWarning ? 'warning' : ''}`}>
+                  마지막 백업: {getBackupStatusText(lastBackupDays).text}
+                </span>
+              </div>
               <p>현재 모든 태스크와 연결 정보를 JSON 파일로 저장합니다.</p>
               <button
                 type="button"
                 className="btn-export"
                 onClick={() => {
                   onExport();
+                  saveLastBackupTime();
+                  setLastBackupDays(0);
                   setImportMessage({ type: 'success', text: '데이터를 내보냈습니다!' });
                 }}
               >

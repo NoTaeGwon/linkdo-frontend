@@ -15,11 +15,15 @@ import { Graph, type ViewState } from './components/Graph';
 import { TaskPanel } from './components/TaskPanel';
 import { SearchBar } from './components/SearchBar';
 import { AddTaskModal, AutoArrangeModal, LoadingOverlay } from './components/modals';
+import { getLastBackupTime, saveLastBackupTime } from './components/modals/AddTaskModal';
 import { Onboarding, resetOnboarding } from './components/Onboarding';
 import { useTaskStore } from './hooks/useTaskStore';
 import type { TaskNode, Priority } from './types';
 import { TOAST_DURATION, TASK_SELECT_DELAY } from './constants';
 import './styles/global.css';
+
+// 백업 경고 일수 (7일)
+const BACKUP_WARNING_DAYS = 7;
 
 function App() {
   // ================================================================
@@ -40,6 +44,9 @@ function App() {
 
   // 온보딩 투어 상태
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // 백업 알림 토스트 상태
+  const [showBackupToast, setShowBackupToast] = useState(false);
 
   // Refs
   const initialCenterDone = useRef(false);
@@ -90,6 +97,40 @@ function App() {
 
     initialCenterDone.current = true;
   }, [isLoading, tasks]);
+
+  // ================================================================
+  // 백업 알림 체크
+  // ================================================================
+  useEffect(() => {
+    if (isLoading || isDemoMode) return;
+    
+    // 태스크가 있을 때만 백업 알림
+    if (tasks.length === 0) return;
+
+    const lastBackup = getLastBackupTime();
+    if (!lastBackup) {
+      // 백업 기록이 없으면 3초 후 알림
+      const timer = setTimeout(() => setShowBackupToast(true), 3000);
+      return () => clearTimeout(timer);
+    }
+
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - lastBackup.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays >= BACKUP_WARNING_DAYS) {
+      // 7일 이상 지났으면 3초 후 알림
+      const timer = setTimeout(() => setShowBackupToast(true), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, isDemoMode, tasks.length]);
+
+  // 백업 실행 핸들러
+  const handleBackupNow = () => {
+    exportData();
+    saveLastBackupTime();
+    setShowBackupToast(false);
+    showToast('✅ 데이터를 백업했습니다!');
+  };
 
   // ================================================================
   // 태그 필터 관련
@@ -362,6 +403,26 @@ function App() {
 
       {/* 토스트 메시지 */}
       {toastMessage && <div className="toast-message">{toastMessage}</div>}
+
+      {/* 백업 알림 토스트 */}
+      {showBackupToast && (
+        <div className="backup-toast">
+          <div className="backup-toast-content">
+            <div className="backup-toast-title">⚠️ 백업을 권장합니다</div>
+            <div className="backup-toast-message">
+              마지막 백업이 오래되었거나 백업 기록이 없습니다. 데이터 손실 방지를 위해 백업하세요.
+            </div>
+          </div>
+          <div className="backup-toast-actions">
+            <button className="btn-backup-now" onClick={handleBackupNow}>
+              백업하기
+            </button>
+            <button className="btn-backup-later" onClick={() => setShowBackupToast(false)}>
+              나중에
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 모달들 */}
       {showAddModal && (
